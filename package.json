@@ -1,0 +1,29 @@
+{
+  "name": "loom-cli",
+  "version": "0.1.0",
+  "description": "Weave AI skills once, compile to every coding agent.",
+  "type": "module",
+  "bin": {
+    "loom": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "ai",
+    "skills",
+    "claude",
+    "copilot",
+    "codex",
+    "gemini",
+    "agents",
+    "developer-tools"
+  ],
+  "author": "Shaun Smith",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
