@@ -6,7 +6,7 @@ import { loadConfig } from "../config/loader.js";
 import { gitCommit } from "../utils/git.js";
 import { walkDir } from "../utils/sources.js";
 
-interface Change {
+export interface Change {
   location: string;
   file: string;
   additions: string[];
@@ -86,7 +86,7 @@ export async function harvest(args: string[]): Promise<void> {
 }
 
 /** Find project path + any worktree sibling directories */
-function findLocations(projectPath: string, _name: string): string[] {
+export function findLocations(projectPath: string, _name: string): string[] {
   const locations = [projectPath];
   const parent = path.dirname(projectPath);
   const worktreesDir = path.join(parent, `${path.basename(projectPath)}.worktrees`);
@@ -108,7 +108,7 @@ function findLocations(projectPath: string, _name: string): string[] {
 }
 
 /** Diff deployed files in a location against compiled output */
-function diffLocation(location: string, compiledOutDir: string): Change[] {
+export function diffLocation(location: string, compiledOutDir: string): Change[] {
   const changes: Change[] = [];
   const filesToCheck = ["CLAUDE.md", ".github/copilot-instructions.md", "AGENTS.md", "GEMINI.md"];
 
