@@ -1,6 +1,10 @@
 node_modules/
 dist/
-*.js
+coverage/
 *.d.ts
 *.js.map
+# Ignore compiled JS except config files at root
+*.js
+!eslint.config.js
+!vitest.config.ts
 !src/**

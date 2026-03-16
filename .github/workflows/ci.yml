@@ -15,4 +15,14 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
       - run: npm run build
+      - run: npm test
+      - run: npm run test:coverage
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/

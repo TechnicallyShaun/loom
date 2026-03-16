@@ -5,7 +5,10 @@ import type { SourceContent } from "../types/index.js";
 /** Read all .md files from a directory, sorted by name */
 export function readMarkdownDir(dir: string): SourceContent[] {
   if (!fs.existsSync(dir)) return [];
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".md")).sort();
+  const files = fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith(".md"))
+    .sort();
   return files.map((f) => ({
     name: path.basename(f, ".md"),
     content: fs.readFileSync(path.join(dir, f), "utf-8").trim(),
@@ -37,22 +40,14 @@ export function readAgentsDir(dir: string): SourceContent[] {
 }
 
 /** Merge two layers: project overrides global for items with the same name */
-export function mergeLayers(
-  global: SourceContent[],
-  project: SourceContent[],
-): SourceContent[] {
+export function mergeLayers(global: SourceContent[], project: SourceContent[]): SourceContent[] {
   const projectNames = new Set(project.map((p) => p.name));
   const fromGlobal = global.filter((g) => !projectNames.has(g.name));
-  return [...fromGlobal, ...project].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  return [...fromGlobal, ...project].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** Concatenate instructions: global first, then project */
-export function concatInstructions(
-  global: SourceContent[],
-  project: SourceContent[],
-): string {
+export function concatInstructions(global: SourceContent[], project: SourceContent[]): string {
   const all = [...global, ...project];
   return all.map((s) => s.content).join("\n\n---\n\n");
 }

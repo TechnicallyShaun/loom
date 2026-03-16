@@ -16,9 +16,7 @@ export async function deploy(args: string[]): Promise<void> {
   }
 
   const filter = args[0];
-  const toDeploy = filter
-    ? projectNames.filter((n) => n === filter)
-    : projectNames;
+  const toDeploy = filter ? projectNames.filter((n) => n === filter) : projectNames;
 
   if (filter && toDeploy.length === 0) {
     console.log(`Unknown project: ${filter}`);
@@ -66,10 +64,7 @@ export async function deploy(args: string[]): Promise<void> {
     const logEntry = `${ts} | ${deployed.join(", ")} @${hash}\n`;
     fs.appendFileSync(logPath, logEntry, "utf-8");
 
-    gitCommit(
-      dir,
-      `deploy: ${deployed.join(", ")} @${hash} (${ts})`,
-    );
+    gitCommit(dir, `deploy: ${deployed.join(", ")} @${hash} (${ts})`);
   }
 }
 

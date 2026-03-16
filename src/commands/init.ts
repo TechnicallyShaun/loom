@@ -31,11 +31,7 @@ export async function init(_args: string[]): Promise<void> {
   fs.writeFileSync(path.join(dir, "config.yaml"), stringify(config), "utf-8");
 
   // Create .gitignore — config.yaml contains real paths
-  fs.writeFileSync(
-    path.join(dir, ".gitignore"),
-    "config.yaml\n.compiled/\n",
-    "utf-8",
-  );
+  fs.writeFileSync(path.join(dir, ".gitignore"), "config.yaml\n.compiled/\n", "utf-8");
 
   // Git init + initial commit
   gitInit(dir);

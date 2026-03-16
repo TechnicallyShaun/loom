@@ -35,20 +35,20 @@ export async function discover(_args: string[]): Promise<void> {
 
     // Last compile/deploy from git log
     try {
-      const lastCompile = execSync(
-        `git log --oneline --grep="compile: ${name}" -1`,
-        { cwd: dir, encoding: "utf-8" },
-      ).trim();
+      const lastCompile = execSync(`git log --oneline --grep="compile: ${name}" -1`, {
+        cwd: dir,
+        encoding: "utf-8",
+      }).trim();
       if (lastCompile) console.log(`    Last compile: ${lastCompile}`);
     } catch {
       // ignore
     }
 
     try {
-      const lastDeploy = execSync(
-        `git log --oneline --grep="deploy: ${name}" -1`,
-        { cwd: dir, encoding: "utf-8" },
-      ).trim();
+      const lastDeploy = execSync(`git log --oneline --grep="deploy: ${name}" -1`, {
+        cwd: dir,
+        encoding: "utf-8",
+      }).trim();
       if (lastDeploy) console.log(`    Last deploy: ${lastDeploy}`);
     } catch {
       // ignore

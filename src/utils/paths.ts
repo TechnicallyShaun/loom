@@ -33,5 +33,8 @@ export function configPath(base: string): string {
 
 /** Timestamp string for commit messages */
 export function timestamp(): string {
-  return new Date().toISOString().replace("T", " ").replace(/\.\d+Z$/, "");
+  return new Date()
+    .toISOString()
+    .replace("T", " ")
+    .replace(/\.\d+Z$/, "");
 }

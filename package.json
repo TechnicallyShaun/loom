@@ -1,6 +1,6 @@
 {
   "name": "loom-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Weave AI skills once, compile to every coding agent.",
   "type": "module",
   "bin": {
@@ -9,7 +9,13 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/",
+    "format": "prettier --write 'src/**/*.ts' '*.json'",
+    "format:check": "prettier --check 'src/**/*.ts' '*.json'"
   },
   "keywords": [
     "ai",
@@ -24,7 +30,14 @@
   "author": "Shaun Smith",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.0",
+    "eslint": "^10.0.3",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.57.1",
+    "vitest": "^4.1.0"
   },
   "dependencies": {
     "yaml": "^2.8.2"

@@ -22,9 +22,7 @@ export async function harvest(args: string[]): Promise<void> {
   }
 
   const filter = args[0];
-  const toHarvest = filter
-    ? projectNames.filter((n) => n === filter)
-    : projectNames;
+  const toHarvest = filter ? projectNames.filter((n) => n === filter) : projectNames;
 
   if (filter && toHarvest.length === 0) {
     console.log(`Unknown project: ${filter}`);
@@ -82,15 +80,12 @@ export async function harvest(args: string[]): Promise<void> {
   }
 
   if (totalChanges > 0) {
-    gitCommit(
-      dir,
-      `harvest: ${toHarvest.join(", ")} +${totalChanges} changes (${timestamp()})`,
-    );
+    gitCommit(dir, `harvest: ${toHarvest.join(", ")} +${totalChanges} changes (${timestamp()})`);
   }
 }
 
 /** Find project path + any worktree sibling directories */
-function findLocations(projectPath: string, name: string): string[] {
+function findLocations(projectPath: string, _name: string): string[] {
   const locations = [projectPath];
   const parent = path.dirname(projectPath);
   const worktreesDir = path.join(parent, `${path.basename(projectPath)}.worktrees`);
@@ -114,12 +109,7 @@ function findLocations(projectPath: string, name: string): string[] {
 /** Diff deployed files in a location against compiled output */
 function diffLocation(location: string, compiledOutDir: string): Change[] {
   const changes: Change[] = [];
-  const filesToCheck = [
-    "CLAUDE.md",
-    ".github/copilot-instructions.md",
-    "AGENTS.md",
-    "GEMINI.md",
-  ];
+  const filesToCheck = ["CLAUDE.md", ".github/copilot-instructions.md", "AGENTS.md", "GEMINI.md"];
 
   // Also check for skill and agent files
   for (const skillDir of [".claude/skills", ".github/copilot/skills"]) {
@@ -184,13 +174,7 @@ function applyChange(
     relFile === "GEMINI.md"
   ) {
     // Write as a harvested instruction file
-    const dest = path.join(
-      loomDir,
-      "projects",
-      projectName,
-      "instructions",
-      "harvested.md",
-    );
+    const dest = path.join(loomDir, "projects", projectName, "instructions", "harvested.md");
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.writeFileSync(dest, content, "utf-8");
   } else if (relFile.includes("/skills/")) {
@@ -198,14 +182,7 @@ function applyChange(
     const match = relFile.match(/skills\/([^/]+)/);
     if (match) {
       const skillName = match[1];
-      const dest = path.join(
-        loomDir,
-        "projects",
-        projectName,
-        "skills",
-        skillName,
-        "SKILL.md",
-      );
+      const dest = path.join(loomDir, "projects", projectName, "skills", skillName, "SKILL.md");
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       fs.writeFileSync(dest, content, "utf-8");
     }

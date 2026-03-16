@@ -26,9 +26,7 @@ export async function compile(args: string[]): Promise<void> {
 
   // If a specific project is given, only compile that one
   const filter = args[0];
-  const toCompile = filter
-    ? projectNames.filter((n) => n === filter)
-    : projectNames;
+  const toCompile = filter ? projectNames.filter((n) => n === filter) : projectNames;
 
   if (filter && toCompile.length === 0) {
     console.log(`Unknown project: ${filter}`);

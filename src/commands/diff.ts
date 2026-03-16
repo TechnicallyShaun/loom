@@ -14,9 +14,7 @@ export async function diff(args: string[]): Promise<void> {
   }
 
   const filter = args[0];
-  const toCheck = filter
-    ? projectNames.filter((n) => n === filter)
-    : projectNames;
+  const toCheck = filter ? projectNames.filter((n) => n === filter) : projectNames;
 
   if (filter && toCheck.length === 0) {
     console.log(`Unknown project: ${filter}`);
@@ -51,13 +49,6 @@ export async function diff(args: string[]): Promise<void> {
       if (compiled !== existing) {
         console.log(`  ~ ${relPath} (modified)`);
         changeCount++;
-      }
-    }
-
-    // Check for files at target that aren't in compiled output
-    if (fs.existsSync(entry.path)) {
-      for (const relPath of files) {
-        // Already handled above
       }
     }
 

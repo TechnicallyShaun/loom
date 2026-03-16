@@ -4,10 +4,7 @@ import { compileCopilot } from "./copilot.js";
 import { compileCodex } from "./codex.js";
 import { compileGemini } from "./gemini.js";
 
-export function compileForTarget(
-  target: TargetType,
-  project: MergedProject,
-): CompiledFile[] {
+export function compileForTarget(target: TargetType, project: MergedProject): CompiledFile[] {
   switch (target) {
     case "claude":
       return compileClaude(project);
