@@ -4,31 +4,46 @@ const [, , command, ...args] = process.argv;
 
 async function main() {
   switch (command) {
-    case "init":
+    case "init": {
       const { init } = await import("./commands/init.js");
       return init(args);
-    case "compile":
+    }
+    case "register": {
+      const { register } = await import("./commands/register.js");
+      return register(args);
+    }
+    case "compile": {
       const { compile } = await import("./commands/compile.js");
       return compile(args);
-    case "deploy":
+    }
+    case "deploy": {
       const { deploy } = await import("./commands/deploy.js");
       return deploy(args);
-    case "add-project":
-      const { addProject } = await import("./commands/add-project.js");
-      return addProject(args);
-    case "discover":
+    }
+    case "harvest": {
+      const { harvest } = await import("./commands/harvest.js");
+      return harvest(args);
+    }
+    case "diff": {
+      const { diff } = await import("./commands/diff.js");
+      return diff(args);
+    }
+    case "discover": {
       const { discover } = await import("./commands/discover.js");
       return discover(args);
+    }
     default:
       console.log(`
 loom — weave AI skills once, compile to every coding agent.
 
 Usage:
-  loom init              Create a .loom/ directory with starter config
-  loom compile           Build target-specific output from source skills
-  loom deploy            Copy compiled output to registered locations
-  loom add-project <path>  Register a project for deployment
-  loom discover          Show found configs, skills, and targets
+  loom init                         Create ~/.loom/ with starter structure
+  loom register <name> <path>       Register a project for compilation
+  loom compile [project]            Compile source to target-specific output
+  loom deploy [project]             Copy compiled output to project paths
+  loom harvest [project]            Scan for changes and merge back to source
+  loom diff [project]               Preview what deploy would change
+  loom discover                     Show registered projects and status
       `);
   }
 }

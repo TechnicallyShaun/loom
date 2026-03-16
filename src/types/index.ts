@@ -1,32 +1,35 @@
-export interface LoomConfig {
-  targets: TargetConfig[];
-  projects: ProjectConfig[];
-  skills: string[]; // glob patterns for skill discovery
-}
+export type TargetType = "claude" | "copilot" | "codex" | "gemini";
 
-export interface TargetConfig {
-  name: string;
-  type: TargetType;
-  globalPath?: string;
-  repoPath?: string;
-  enabled: boolean;
-}
-
-export type TargetType = "claude" | "copilot" | "codex" | "gemini" | "cursor";
-
-export interface ProjectConfig {
+export interface ProjectEntry {
   path: string;
-  targets: string[]; // target names enabled for this project
+  targets: TargetType[];
 }
 
-export interface Skill {
+export interface LoomConfig {
+  projects: Record<string, ProjectEntry>;
+}
+
+export interface SourceContent {
   name: string;
-  filePath: string;
   content: string;
 }
 
-export interface CompiledOutput {
-  targetType: TargetType;
-  fileName: string;
+export interface MergedProject {
+  name: string;
+  targets: TargetType[];
+  projectPath: string;
+  instructions: string;
+  skills: SourceContent[];
+  agents: SourceContent[];
+}
+
+export interface CompiledFile {
+  relativePath: string;
   content: string;
+}
+
+export interface CompiledProject {
+  name: string;
+  targets: TargetType[];
+  files: CompiledFile[];
 }
