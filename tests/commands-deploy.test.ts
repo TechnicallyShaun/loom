@@ -48,12 +48,10 @@ describe("deploy command", () => {
     await deploy(["anvil"]);
 
     expect(fs.existsSync(path.join(projectPath, "CLAUDE.md"))).toBe(true);
-    expect(
-      fs.existsSync(path.join(projectPath, ".claude", "skills", "analyse", "SKILL.md")),
-    ).toBe(true);
-    expect(fs.existsSync(path.join(projectPath, ".github", "copilot-instructions.md"))).toBe(
+    expect(fs.existsSync(path.join(projectPath, ".claude", "skills", "analyse", "SKILL.md"))).toBe(
       true,
     );
+    expect(fs.existsSync(path.join(projectPath, ".github", "copilot-instructions.md"))).toBe(true);
   });
 
   it("creates deploy log entry", async () => {

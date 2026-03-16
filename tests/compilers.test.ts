@@ -76,9 +76,7 @@ describe("compileCopilot", () => {
 
   it("produces skill files under .github/skills/", () => {
     const files = compileCopilot(makeProject());
-    const skill = files.find(
-      (f) => f.relativePath === ".github/skills/analyse/SKILL.md",
-    );
+    const skill = files.find((f) => f.relativePath === ".github/skills/analyse/SKILL.md");
     expect(skill).toBeDefined();
   });
 

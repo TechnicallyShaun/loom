@@ -51,16 +51,11 @@ describe("harvest command", () => {
     const baseName = path.basename(projectPath);
     const worktreesDir = path.join(parentDir, `${baseName}.worktrees`);
     fs.mkdirSync(path.join(worktreesDir, "GOS-123456"), { recursive: true });
-    writeFile(
-      path.join(worktreesDir, "GOS-123456", "CLAUDE.md"),
-      "worktree content",
-    );
+    writeFile(path.join(worktreesDir, "GOS-123456", "CLAUDE.md"), "worktree content");
 
     // Verify the directory structure exists
     expect(fs.existsSync(worktreesDir)).toBe(true);
-    expect(
-      fs.existsSync(path.join(worktreesDir, "GOS-123456", "CLAUDE.md")),
-    ).toBe(true);
+    expect(fs.existsSync(path.join(worktreesDir, "GOS-123456", "CLAUDE.md"))).toBe(true);
 
     cleanup(worktreesDir);
   });

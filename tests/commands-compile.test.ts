@@ -87,24 +87,13 @@ describe("compile command", () => {
     ).toBe(true);
     expect(
       fs.existsSync(
-        path.join(
-          loomDir,
-          ".compiled",
-          "anvil",
-          ".github",
-          "skills",
-          "analyse",
-          "SKILL.md",
-        ),
+        path.join(loomDir, ".compiled", "anvil", ".github", "skills", "analyse", "SKILL.md"),
       ),
     ).toBe(true);
   });
 
   it("project skills override global skills with same name", async () => {
-    writeFile(
-      path.join(loomDir, "global", "skills", "setup-env", "SKILL.md"),
-      "Global setup-env",
-    );
+    writeFile(path.join(loomDir, "global", "skills", "setup-env", "SKILL.md"), "Global setup-env");
     writeFile(
       path.join(loomDir, "projects", "anvil", "skills", "setup-env", "SKILL.md"),
       "Anvil setup-env",
@@ -146,10 +135,7 @@ describe("compile command", () => {
       },
     });
     fs.mkdirSync(path.join(loomDir, "projects", "spark", "instructions"), { recursive: true });
-    writeFile(
-      path.join(loomDir, "global", "instructions", "conv.md"),
-      "Global",
-    );
+    writeFile(path.join(loomDir, "global", "instructions", "conv.md"), "Global");
 
     await compile([]);
 

@@ -60,5 +60,3 @@ export async function diff(args: string[]): Promise<void> {
     }
   }
 }
-
-

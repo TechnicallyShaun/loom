@@ -91,17 +91,11 @@ describe("full pipeline: init → register → compile → deploy → diff → d
     expect(workAgent).toContain("Work Agent");
 
     // Copilot outputs
-    expect(
-      fs.existsSync(path.join(compiledDir, ".github", "copilot-instructions.md")),
-    ).toBe(true);
-    expect(
-      fs.existsSync(
-        path.join(compiledDir, ".github", "skills", "analyse", "SKILL.md"),
-      ),
-    ).toBe(true);
-    expect(
-      fs.existsSync(path.join(compiledDir, ".github", "agents", "work.agent.md")),
-    ).toBe(true);
+    expect(fs.existsSync(path.join(compiledDir, ".github", "copilot-instructions.md"))).toBe(true);
+    expect(fs.existsSync(path.join(compiledDir, ".github", "skills", "analyse", "SKILL.md"))).toBe(
+      true,
+    );
+    expect(fs.existsSync(path.join(compiledDir, ".github", "agents", "work.agent.md"))).toBe(true);
 
     // Codex output
     expect(fs.existsSync(path.join(compiledDir, "AGENTS.md"))).toBe(true);
@@ -113,12 +107,10 @@ describe("full pipeline: init → register → compile → deploy → diff → d
     await deploy(["anvil"]);
 
     expect(fs.existsSync(path.join(projectPath, "CLAUDE.md"))).toBe(true);
-    expect(
-      fs.existsSync(path.join(projectPath, ".claude", "skills", "analyse", "SKILL.md")),
-    ).toBe(true);
-    expect(
-      fs.existsSync(path.join(projectPath, ".github", "copilot-instructions.md")),
-    ).toBe(true);
+    expect(fs.existsSync(path.join(projectPath, ".claude", "skills", "analyse", "SKILL.md"))).toBe(
+      true,
+    );
+    expect(fs.existsSync(path.join(projectPath, ".github", "copilot-instructions.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "AGENTS.md"))).toBe(true);
     expect(fs.existsSync(path.join(projectPath, "GEMINI.md"))).toBe(true);
 

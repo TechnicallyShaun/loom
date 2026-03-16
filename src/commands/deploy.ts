@@ -67,5 +67,3 @@ export async function deploy(args: string[]): Promise<void> {
     gitCommit(dir, `deploy: ${deployed.join(", ")} @${hash} (${ts})`);
   }
 }
-
-
