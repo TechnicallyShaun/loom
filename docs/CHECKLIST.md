@@ -23,8 +23,8 @@
 - [x] Refactor: extracted shared walkDir, removed 3 duplicates, fixed harvest scan paths
 
 ## Phase 4: Test Completeness
-- [ ] Verify all commands handle optional [project] arg (no arg = all projects)
-- [ ] Add edge case tests: empty projects, missing folders, invalid config
+- [x] Verify all commands handle optional [project] arg (no arg = all projects)
+- [x] Add edge case tests: empty projects, missing folders, invalid config
 - [ ] Harvest diff engine tests with worktree scenarios
 - [ ] Integration test: full init→register→compile→deploy→harvest round-trip
 
