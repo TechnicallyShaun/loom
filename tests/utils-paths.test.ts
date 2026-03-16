@@ -41,19 +41,21 @@ describe("loomDir", () => {
 
 describe("path helpers", () => {
   it("globalDir returns base/global", () => {
-    expect(globalDir("/foo")).toBe("/foo/global");
+    expect(globalDir("/foo")).toBe(path.join("/foo", "global"));
   });
 
   it("projectDir returns base/projects/name", () => {
-    expect(projectDir("/foo", "bar")).toBe("/foo/projects/bar");
+    expect(projectDir("/foo", "bar")).toBe(path.join("/foo", "projects", "bar"));
   });
 
   it("compiledDir returns base/.compiled/name", () => {
-    expect(compiledDir("/foo", "bar")).toBe("/foo/.compiled/bar");
+    expect(compiledDir("/foo", "bar")).toBe(
+      path.join("/foo", ".compiled", "bar"),
+    );
   });
 
   it("configPath returns base/config.yaml", () => {
-    expect(configPath("/foo")).toBe("/foo/config.yaml");
+    expect(configPath("/foo")).toBe(path.join("/foo", "config.yaml"));
   });
 });
 
