@@ -38,7 +38,7 @@
 ## Phase 6: Polish ✅
 - [x] Update README.md to match v2 architecture
 - [x] Ensure `loom --help` output is clear and complete
-- [ ] Run on Windows via laptop node (path handling validation)
+- [x] Run on Windows via laptop node (path handling validation) — fixed 4 path separator tests + timeout issue, 100/100 green
 
 ## Phase 7: Second Opinions
 - [ ] Give source + checklist to Gemini for review — completeness check against v2-architecture.md
