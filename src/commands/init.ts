@@ -23,15 +23,22 @@ export async function init(_args: string[]): Promise<void> {
     "global/tools",
     "projects",
   ]) {
-    ensureDir(path.join(dir, sub));
+    const subDir = path.join(dir, sub);
+    ensureDir(subDir);
+    // Git doesn't track empty directories — add .gitkeep
+    const gitkeep = path.join(subDir, ".gitkeep");
+    if (!fs.existsSync(gitkeep)) {
+      fs.writeFileSync(gitkeep, "", "utf-8");
+    }
   }
 
   // Create empty config
   const config: LoomConfig = { projects: {} };
   fs.writeFileSync(path.join(dir, "config.yaml"), stringify(config), "utf-8");
 
-  // Create .gitignore — config.yaml contains real paths
-  fs.writeFileSync(path.join(dir, ".gitignore"), "config.yaml\n.compiled/\n", "utf-8");
+  // Create .gitignore — config.yaml contains real paths (not committed to public repo)
+  // .compiled/ is NOT gitignored — it's versioned for rollback/audit
+  fs.writeFileSync(path.join(dir, ".gitignore"), "config.yaml\n", "utf-8");
 
   // Git init + initial commit
   gitInit(dir);

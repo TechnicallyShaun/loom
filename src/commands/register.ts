@@ -37,9 +37,14 @@ export async function register(args: string[]): Promise<void> {
   config.projects[name] = { path: projectPath, targets };
   saveConfig(dir, config);
 
-  // Scaffold project directories
+  // Scaffold project directories with .gitkeep so git tracks them
   for (const sub of ["instructions", "skills", "agents", "tools"]) {
-    ensureDir(path.join(dir, "projects", name, sub));
+    const subDir = path.join(dir, "projects", name, sub);
+    ensureDir(subDir);
+    const gitkeep = path.join(subDir, ".gitkeep");
+    if (!fs.existsSync(gitkeep)) {
+      fs.writeFileSync(gitkeep, "", "utf-8");
+    }
   }
 
   // Commit scaffold (config.yaml is gitignored, but project dirs aren't)

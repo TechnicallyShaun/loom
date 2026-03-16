@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { loomDir, compiledDir, timestamp } from "../utils/paths.js";
 import { loadConfig } from "../config/loader.js";
-import { gitCommit, getShortHash } from "../utils/git.js";
+import { gitCommit, getShortHash, gitTag } from "../utils/git.js";
 import { ensureDir, walkDir } from "../utils/sources.js";
 
 export async function deploy(args: string[]): Promise<void> {
@@ -64,6 +64,17 @@ export async function deploy(args: string[]): Promise<void> {
     const logEntry = `${ts} | ${deployed.join(", ")} @${hash}\n`;
     fs.appendFileSync(logPath, logEntry, "utf-8");
 
-    gitCommit(dir, `deploy: ${deployed.join(", ")} @${hash} (${ts})`);
+    const commitMsg = `deploy: ${deployed.join(", ")} @${hash} (${ts})`;
+    gitCommit(dir, commitMsg);
+
+    // Tag the deploy for easy rollback: deploy/<project>/<timestamp>
+    const tagTs = ts.replace(/[: ]/g, "-");
+    for (const name of deployed) {
+      try {
+        gitTag(dir, `deploy/${name}/${tagTs}`);
+      } catch {
+        // Tag already exists — skip
+      }
+    }
   }
 }

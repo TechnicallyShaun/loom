@@ -26,3 +26,10 @@ export function getShortHash(loomDir: string): string {
     encoding: "utf-8",
   }).trim();
 }
+
+export function gitTag(loomDir: string, tagName: string): void {
+  execSync(`git tag ${JSON.stringify(tagName)}`, {
+    cwd: loomDir,
+    stdio: "pipe",
+  });
+}

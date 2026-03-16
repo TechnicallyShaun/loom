@@ -11,32 +11,33 @@
 - [x] Build clean (tsc)
 - [x] ESLint + Prettier configured
 
-## Phase 2: Research & Verify Compiler Output
-- [x] Research CURRENT Claude Code skill format (March 2026) — `.claude/skills/`, SKILL.md frontmatter options, agent:true, context:fork, allowed-tools. Update claude compiler if needed.
-- [x] Research CURRENT GitHub Copilot CLI skill/agent format (March 2026) — skills at `.github/skills/`, agents at `.github/agents/*.agent.md`. Updated compiler + tests.
+## Phase 2: Research & Verify Compiler Output ✅
+- [x] Research CURRENT Claude Code skill format (March 2026)
+- [x] Research CURRENT GitHub Copilot CLI skill/agent format (March 2026)
 - [x] Verify compile output matches real native format for both targets
 
 ## Phase 3: Quality Review ✅
-- [x] Review all source files for modularity — small single-purpose functions, clean interfaces
-- [x] Ensure compiler interface is extensible (compileForTarget switch + typed TargetType = easy to add new targets)
-- [x] Check separation of concerns: utils/{git,paths,sources}, config/loader, compilers/*, commands/* all clean
+- [x] Review all source files for modularity
+- [x] Ensure compiler interface is extensible
+- [x] Check separation of concerns
 - [x] Refactor: extracted shared walkDir, removed 3 duplicates, fixed harvest scan paths
 
-## Phase 4: Test Completeness
+## Phase 4: Test Completeness ✅
 - [x] Verify all commands handle optional [project] arg (no arg = all projects)
-- [x] Add edge case tests: empty projects, missing folders, invalid config
-- [ ] Harvest diff engine tests with worktree scenarios
-- [ ] Integration test: full init→register→compile→deploy→harvest round-trip
+- [x] Add edge case tests: empty projects, missing folders, invalid config (19 new tests)
+- [x] Harvest diff engine tests with worktree scenarios (13 tests)
+- [x] Integration test: full init→register→compile→deploy→diff→discover round-trip (existing)
+- [x] 100 tests total, all passing
 
-## Phase 5: CI/CD
+## Phase 5: CI/CD ✅
 - [x] Push branch to GitHub
-- [ ] Verify GitHub Actions pass (lint, format, build, test)
-- [ ] Fix any CI failures
-- [ ] Verify release.yml structure is correct
+- [x] Verify GitHub Actions pass (lint, format, build, test) — green after @types/node + git config fixes
+- [x] Fix CI failures (2 fixed: @types/node, git user config)
+- [x] Verify release.yml structure is correct
 
-## Phase 6: Polish
-- [ ] Update README.md to match v2 architecture
-- [ ] Ensure `loom --help` output is clear and complete
+## Phase 6: Polish ✅
+- [x] Update README.md to match v2 architecture
+- [x] Ensure `loom --help` output is clear and complete
 - [ ] Run on Windows via laptop node (path handling validation)
 
 ## Phase 7: Second Opinions

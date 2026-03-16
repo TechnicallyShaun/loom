@@ -31,6 +31,7 @@ export async function harvest(args: string[]): Promise<void> {
   }
 
   let totalChanges = 0;
+  const harvestedProjects: string[] = [];
 
   for (const name of toHarvest) {
     const entry = config.projects[name];
@@ -74,6 +75,7 @@ export async function harvest(args: string[]): Promise<void> {
         applyChange(dir, name, change.file, sourcePath);
       }
       totalChanges += changes.length;
+      harvestedProjects.push(name);
       console.log(`Merged ${changes.length} change(s) for ${name}.`);
     } else {
       console.log(`Skipped changes for ${name}.`);
@@ -81,7 +83,10 @@ export async function harvest(args: string[]): Promise<void> {
   }
 
   if (totalChanges > 0) {
-    gitCommit(dir, `harvest: ${toHarvest.join(", ")} +${totalChanges} changes (${timestamp()})`);
+    gitCommit(
+      dir,
+      `harvest: ${harvestedProjects.join(", ")} +${totalChanges} changes (${timestamp()})`,
+    );
   }
 }
 
@@ -157,33 +162,41 @@ export function diffLocation(location: string, compiledOutDir: string): Change[]
 }
 
 /** Apply a harvested change back to loom source */
-function applyChange(
+export function applyChange(
   loomDir: string,
   projectName: string,
   relFile: string,
   sourcePath: string,
 ): void {
-  // Map deployed file back to loom source location
-  // Instructions files (CLAUDE.md, etc) → projects/<name>/instructions/harvested.md
-  // Skills → projects/<name>/skills/<name>/SKILL.md
+  // Normalize path separators for cross-platform matching
+  const normalised = relFile.split(path.sep).join("/");
   const content = fs.readFileSync(sourcePath, "utf-8");
 
   if (
-    relFile === "CLAUDE.md" ||
-    relFile === ".github/copilot-instructions.md" ||
-    relFile === "AGENTS.md" ||
-    relFile === "GEMINI.md"
+    normalised === "CLAUDE.md" ||
+    normalised === ".github/copilot-instructions.md" ||
+    normalised === "AGENTS.md" ||
+    normalised === "GEMINI.md"
   ) {
     // Write as a harvested instruction file
     const dest = path.join(loomDir, "projects", projectName, "instructions", "harvested.md");
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.writeFileSync(dest, content, "utf-8");
-  } else if (relFile.includes("/skills/")) {
+  } else if (normalised.includes("/skills/")) {
     // Extract skill name and write to project skills
-    const match = relFile.match(/skills\/([^/]+)/);
+    const match = normalised.match(/skills\/([^/]+)/);
     if (match) {
       const skillName = match[1];
       const dest = path.join(loomDir, "projects", projectName, "skills", skillName, "SKILL.md");
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, content, "utf-8");
+    }
+  } else if (normalised.includes("/agents/")) {
+    // Extract agent name and write to project agents
+    const match = normalised.match(/agents\/([^/]+?)(?:\.agent)?\.md$/);
+    if (match) {
+      const agentName = match[1];
+      const dest = path.join(loomDir, "projects", projectName, "agents", `${agentName}.md`);
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       fs.writeFileSync(dest, content, "utf-8");
     }
