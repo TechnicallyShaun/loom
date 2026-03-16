@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { diff } from "../src/commands/diff.js";
@@ -8,6 +8,7 @@ import { setupLoomDir, makeTempDir, cleanup, writeFile } from "./helpers.js";
 let loomDir: string;
 let projectPath: string;
 let originalEnv: string | undefined;
+let logSpy: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   loomDir = setupLoomDir();
@@ -20,6 +21,8 @@ beforeEach(() => {
       anvil: { path: projectPath, targets: ["claude"] },
     },
   });
+
+  logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -28,6 +31,7 @@ afterEach(() => {
   } else {
     process.env.LOOM_DIR = originalEnv;
   }
+  logSpy.mockRestore();
   cleanup(loomDir);
   cleanup(projectPath);
 });
@@ -36,8 +40,11 @@ describe("diff command", () => {
   it("shows new files that would be deployed", async () => {
     writeFile(path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"), "instructions");
 
-    // Should not throw — just logs output
     await diff(["anvil"]);
+
+    const output = logSpy.mock.calls.map((c) => c[0]).join("\n");
+    expect(output).toContain("CLAUDE.md");
+    expect(output).toContain("new");
   });
 
   it("shows modified files", async () => {
@@ -45,6 +52,10 @@ describe("diff command", () => {
     writeFile(path.join(projectPath, "CLAUDE.md"), "old version");
 
     await diff(["anvil"]);
+
+    const output = logSpy.mock.calls.map((c) => c[0]).join("\n");
+    expect(output).toContain("CLAUDE.md");
+    expect(output).toContain("modified");
   });
 
   it("shows up to date when nothing changed", async () => {
@@ -52,9 +63,15 @@ describe("diff command", () => {
     writeFile(path.join(projectPath, "CLAUDE.md"), "same");
 
     await diff(["anvil"]);
+
+    const output = logSpy.mock.calls.map((c) => c[0]).join("\n");
+    expect(output).toContain("up to date");
   });
 
   it("handles not-yet-compiled projects", async () => {
-    await diff(["anvil"]); // Should not throw
+    await diff(["anvil"]);
+
+    const output = logSpy.mock.calls.map((c) => c[0]).join("\n");
+    expect(output).toContain("not compiled yet");
   });
 });

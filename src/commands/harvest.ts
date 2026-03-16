@@ -22,7 +22,10 @@ export async function harvest(args: string[]): Promise<void> {
     return;
   }
 
-  const filter = args[0];
+  const yesIdx = args.indexOf("--yes");
+  const autoAccept = yesIdx !== -1;
+  const positional = args.filter((a) => a !== "--yes");
+  const filter = positional[0];
   const toHarvest = filter ? projectNames.filter((n) => n === filter) : projectNames;
 
   if (filter && toHarvest.length === 0) {
@@ -66,8 +69,8 @@ export async function harvest(args: string[]): Promise<void> {
       console.log();
     }
 
-    // Prompt for approval
-    const answer = await ask("Accept changes? [y/n] ");
+    // Prompt for approval (skip if --yes)
+    const answer = autoAccept ? "y" : await ask("Accept changes? [y/n] ");
     if (answer.toLowerCase() === "y") {
       // Copy changed files back to loom source
       for (const change of changes) {
@@ -169,7 +172,7 @@ export function applyChange(
   sourcePath: string,
 ): void {
   // Normalize path separators for cross-platform matching
-  const normalised = relFile.split(path.sep).join("/");
+  const normalised = relFile.replace(/\\/g, "/");
   const content = fs.readFileSync(sourcePath, "utf-8");
 
   if (

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { saveConfig } from "../src/config/loader.js";
-import { findLocations, diffLocation } from "../src/commands/harvest.js";
+import { findLocations, diffLocation, applyChange } from "../src/commands/harvest.js";
 import { setupLoomDir, makeTempDir, cleanup, writeFile } from "./helpers.js";
 
 let loomDir: string;
@@ -232,5 +232,92 @@ describe("harvest worktree scenarios", () => {
     expect(changes2[0].additions).toContain("learning from ticket 222");
 
     cleanup(worktreesDir);
+  });
+});
+
+describe("applyChange", () => {
+  it("maps CLAUDE.md to projects/<name>/instructions/harvested.md", () => {
+    const sourcePath = path.join(projectPath, "CLAUDE.md");
+    writeFile(sourcePath, "harvested instructions");
+
+    applyChange(loomDir, "anvil", "CLAUDE.md", sourcePath);
+
+    const dest = path.join(loomDir, "projects", "anvil", "instructions", "harvested.md");
+    expect(fs.existsSync(dest)).toBe(true);
+    expect(fs.readFileSync(dest, "utf-8")).toBe("harvested instructions");
+  });
+
+  it("maps copilot-instructions.md to harvested.md", () => {
+    const sourcePath = path.join(projectPath, ".github", "copilot-instructions.md");
+    writeFile(sourcePath, "copilot harvested");
+
+    applyChange(loomDir, "anvil", ".github/copilot-instructions.md", sourcePath);
+
+    const dest = path.join(loomDir, "projects", "anvil", "instructions", "harvested.md");
+    expect(fs.readFileSync(dest, "utf-8")).toBe("copilot harvested");
+  });
+
+  it("maps AGENTS.md to harvested.md", () => {
+    const sourcePath = path.join(projectPath, "AGENTS.md");
+    writeFile(sourcePath, "agents harvested");
+
+    applyChange(loomDir, "anvil", "AGENTS.md", sourcePath);
+
+    const dest = path.join(loomDir, "projects", "anvil", "instructions", "harvested.md");
+    expect(fs.readFileSync(dest, "utf-8")).toBe("agents harvested");
+  });
+
+  it("maps GEMINI.md to harvested.md", () => {
+    const sourcePath = path.join(projectPath, "GEMINI.md");
+    writeFile(sourcePath, "gemini harvested");
+
+    applyChange(loomDir, "anvil", "GEMINI.md", sourcePath);
+
+    const dest = path.join(loomDir, "projects", "anvil", "instructions", "harvested.md");
+    expect(fs.readFileSync(dest, "utf-8")).toBe("gemini harvested");
+  });
+
+  it("maps skill files to projects/<name>/skills/<skillname>/SKILL.md", () => {
+    const sourcePath = path.join(projectPath, ".claude", "skills", "analyse", "SKILL.md");
+    writeFile(sourcePath, "skill content");
+
+    applyChange(loomDir, "anvil", ".claude/skills/analyse/SKILL.md", sourcePath);
+
+    const dest = path.join(loomDir, "projects", "anvil", "skills", "analyse", "SKILL.md");
+    expect(fs.existsSync(dest)).toBe(true);
+    expect(fs.readFileSync(dest, "utf-8")).toBe("skill content");
+  });
+
+  it("maps agent files to projects/<name>/agents/<agentname>.md", () => {
+    const sourcePath = path.join(projectPath, ".claude", "agents", "work.md");
+    writeFile(sourcePath, "agent content");
+
+    applyChange(loomDir, "anvil", ".claude/agents/work.md", sourcePath);
+
+    const dest = path.join(loomDir, "projects", "anvil", "agents", "work.md");
+    expect(fs.existsSync(dest)).toBe(true);
+    expect(fs.readFileSync(dest, "utf-8")).toBe("agent content");
+  });
+
+  it("handles .agent.md extension by stripping it", () => {
+    const sourcePath = path.join(projectPath, ".github", "agents", "review.agent.md");
+    writeFile(sourcePath, "agent with .agent.md ext");
+
+    applyChange(loomDir, "anvil", ".github/agents/review.agent.md", sourcePath);
+
+    const dest = path.join(loomDir, "projects", "anvil", "agents", "review.md");
+    expect(fs.existsSync(dest)).toBe(true);
+    expect(fs.readFileSync(dest, "utf-8")).toBe("agent with .agent.md ext");
+  });
+
+  it("normalises Windows-style backslash paths", () => {
+    const sourcePath = path.join(projectPath, ".claude", "skills", "deploy", "SKILL.md");
+    writeFile(sourcePath, "windows path content");
+
+    applyChange(loomDir, "anvil", ".claude\\skills\\deploy\\SKILL.md", sourcePath);
+
+    const dest = path.join(loomDir, "projects", "anvil", "skills", "deploy", "SKILL.md");
+    expect(fs.existsSync(dest)).toBe(true);
+    expect(fs.readFileSync(dest, "utf-8")).toBe("windows path content");
   });
 });

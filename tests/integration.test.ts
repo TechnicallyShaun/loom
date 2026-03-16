@@ -8,6 +8,7 @@ import { compile } from "../src/commands/compile.js";
 import { deploy } from "../src/commands/deploy.js";
 import { diff } from "../src/commands/diff.js";
 import { discover } from "../src/commands/discover.js";
+import { harvest } from "../src/commands/harvest.js";
 import { makeTempDir, cleanup, writeFile } from "./helpers.js";
 
 let loomHome: string;
@@ -155,5 +156,108 @@ describe("full pipeline: init → register → compile → deploy → diff → d
     );
     expect(skill).toContain("Spark setup-env");
     expect(skill).not.toContain("Global setup-env");
+  });
+});
+
+describe("full pipeline with harvest", () => {
+  it("init → register → compile → deploy → modify → harvest --yes → verify", async () => {
+    // 1. Init
+    await init([]);
+
+    // 2. Add global content
+    writeFile(
+      path.join(loomHome, "global", "instructions", "conventions.md"),
+      "# Conventions\n\nUse conventional commits.",
+    );
+    writeFile(
+      path.join(loomHome, "global", "skills", "analyse", "SKILL.md"),
+      "# Analyse\n\nAnalyse the codebase.",
+    );
+    writeFile(path.join(loomHome, "global", "agents", "work.md"), "# Work Agent\n\nDo the work.");
+
+    // 3. Register
+    await register(["anvil", projectPath, "--targets", "claude"]);
+
+    // 4. Compile
+    await compile(["anvil"]);
+
+    // 5. Deploy
+    await deploy(["anvil"]);
+
+    // Verify deploy worked
+    expect(fs.existsSync(path.join(projectPath, "CLAUDE.md"))).toBe(true);
+
+    // 6. Simulate user modifying CLAUDE.md in a fake worktree
+    const parentDir = path.dirname(projectPath);
+    const baseName = path.basename(projectPath);
+    const worktreesDir = path.join(parentDir, `${baseName}.worktrees`);
+    const worktreePath = path.join(worktreesDir, "feature-branch");
+
+    // Copy deployed files to worktree and modify them
+    const deployedClaude = fs.readFileSync(path.join(projectPath, "CLAUDE.md"), "utf-8");
+    writeFile(
+      path.join(worktreePath, "CLAUDE.md"),
+      deployedClaude + "\nLearned: always check edge cases in tests.",
+    );
+
+    // Also modify a skill in the worktree
+    const deployedSkill = fs.readFileSync(
+      path.join(projectPath, ".claude", "skills", "analyse", "SKILL.md"),
+      "utf-8",
+    );
+    writeFile(
+      path.join(worktreePath, ".claude", "skills", "analyse", "SKILL.md"),
+      deployedSkill + "\nNew tip: check imports.",
+    );
+
+    // Also modify an agent in the worktree
+    const deployedAgent = fs.readFileSync(
+      path.join(projectPath, ".claude", "agents", "work.md"),
+      "utf-8",
+    );
+    writeFile(
+      path.join(worktreePath, ".claude", "agents", "work.md"),
+      deployedAgent + "\nNew step: lint before commit.",
+    );
+
+    // 7. Harvest with --yes (auto-accept)
+    await harvest(["anvil", "--yes"]);
+
+    // 8. Verify changes appear in loom source
+    const harvestedInstructions = path.join(
+      loomHome,
+      "projects",
+      "anvil",
+      "instructions",
+      "harvested.md",
+    );
+    expect(fs.existsSync(harvestedInstructions)).toBe(true);
+    expect(fs.readFileSync(harvestedInstructions, "utf-8")).toContain(
+      "always check edge cases in tests",
+    );
+
+    const harvestedSkill = path.join(
+      loomHome,
+      "projects",
+      "anvil",
+      "skills",
+      "analyse",
+      "SKILL.md",
+    );
+    expect(fs.existsSync(harvestedSkill)).toBe(true);
+    expect(fs.readFileSync(harvestedSkill, "utf-8")).toContain("check imports");
+
+    const harvestedAgent = path.join(loomHome, "projects", "anvil", "agents", "work.md");
+    expect(fs.existsSync(harvestedAgent)).toBe(true);
+    expect(fs.readFileSync(harvestedAgent, "utf-8")).toContain("lint before commit");
+
+    // 9. Verify git history includes harvest commit
+    const log = execSync("git log --oneline", {
+      cwd: loomHome,
+      encoding: "utf-8",
+    });
+    expect(log).toContain("harvest: anvil");
+
+    cleanup(worktreesDir);
   });
 });
