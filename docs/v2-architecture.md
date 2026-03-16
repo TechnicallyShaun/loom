@@ -40,7 +40,7 @@ Every step is git-committed in the Loom repo for auditability and rollback.
 | Layer | Scope | Example |
 |-------|-------|---------|
 | **Global** | Applies to all projects | Commit conventions, cleansing process, ticket-fetching |
-| **Project** | Applies to one repo | Platinum's IIS setup, iFreedom's build process |
+| **Project** | Applies to one repo | Anvil's IIS setup, Spark's build process |
 
 **Project overrides global.** If both layers define `setup-env`, the project version wins for that project. Instructions concatenate (global + project merged into one file).
 
@@ -51,14 +51,16 @@ Every step is git-committed in the Loom repo for auditability and rollback.
 - **Skills reference tools**, not the other way around.
 
 A tool doc says: "here's what `reset-database.ps1` does, its options, and its pwd requirement."
-A skill says: "when setting up Platinum's dev env, run `reset-database.ps1` with seed data first."
+A skill says: "when setting up Anvil's dev env, run `reset-database.ps1` with seed data first."
 
 ## Source Structure
+
+> **Note:** Project names below are codenames. Real project names are in config.yaml only, never committed to the public repo.
 
 ```
 ~/.loom/                                    ← Loom home (its own git repo)
 │
-├── config.yaml                             ← registered projects, settings
+├── config.yaml                             ← registered projects, settings (gitignored)
 │
 ├── global/
 │   ├── instructions/
@@ -81,20 +83,20 @@ A skill says: "when setting up Platinum's dev env, run `reset-database.ps1` with
 │       └── docker-setup.md                 ← branch options, container profiles
 │
 ├── projects/
-│   ├── platinum/
+│   ├── anvil/                              ← codename example: large project
 │   │   ├── instructions/
-│   │   │   └── platinum-specifics.md       ← IIS, MST4Build, layer quirks
+│   │   │   └── anvil-specifics.md          ← IIS, build tools, layer quirks
 │   │   ├── agents/
-│   │   │   └── work.md                     ← (optional) Platinum-specific work flow override
+│   │   │   └── work.md                     ← (optional) project-specific work flow override
 │   │   ├── skills/
-│   │   │   ├── setup-env/SKILL.md          ← recipe: DB(seed) → Docker(default) → IIS → MST4Build
-│   │   │   └── dto-changes/SKILL.md        ← Platinum mapping + RunMST4Build.ps1
+│   │   │   ├── setup-env/SKILL.md          ← recipe: DB(seed) → Docker(default) → IIS → build
+│   │   │   └── dto-changes/SKILL.md        ← project-specific DTO mapping + build step
 │   │   └── tools/
-│   │       └── setup-iis.md                ← Platinum-only, requires admin
+│   │       └── setup-iis.md                ← project-only, requires admin
 │   │
-│   └── ifreedom/
+│   └── spark/                              ← codename example: smaller service
 │       ├── instructions/
-│       │   └── ifreedom-specifics.md        ← microservice context, shared DB/containers
+│       │   └── spark-specifics.md           ← service context, shared DB/containers
 │       └── skills/
 │           └── setup-env/SKILL.md           ← recipe: DB(seed) → Docker(custom set) → build
 │
@@ -113,11 +115,11 @@ Registers a project. Adds entry to `config.yaml`:
 
 ```yaml
 projects:
-  platinum:
-    path: D:\git\platinum
+  anvil:
+    path: D:\git\anvil
     targets: [claude, copilot]
-  ifreedom:
-    path: D:\git\ifreedom
+  spark:
+    path: D:\git\spark
     targets: [claude, copilot]
 ```
 
@@ -150,11 +152,11 @@ Without a project arg, compiles all registered projects.
 Copies compiled output to the registered project path. Creates a commit/tag in the Loom repo recording what was deployed and where.
 
 ```
-compile output → D:\git\platinum\CLAUDE.md
-              → D:\git\platinum\.claude\skills\*
-              → D:\git\platinum\.github\copilot-instructions.md
-              → D:\git\platinum\.github\copilot\agents\*
-              → D:\git\platinum\.github\copilot\skills\*
+compile output → D:\git\anvil\CLAUDE.md
+              → D:\git\anvil\.claude\skills\*
+              → D:\git\anvil\.github\copilot-instructions.md
+              → D:\git\anvil\.github\copilot\agents\*
+              → D:\git\anvil\.github\copilot\skills\*
 ```
 
 **Git:** Creates commit: `deploy: <project> @<compile-hash> (<timestamp>)`
@@ -171,20 +173,20 @@ Scans deployed locations (including worktrees) for changes made since the last d
 
 **Default mode (mechanical diff):**
 ```
-$ loom harvest platinum
+$ loom harvest anvil
 
-platinum.worktrees/GOS-123456/CLAUDE.md — 3 new lines:
+anvil.worktrees/GOS-123456/CLAUDE.md — 3 new lines:
   + "Always check EF migrations after switching branches"
   + "PropertyFacade requires both Amount and TaxCode"
   + "Run tests from the Facade.Tests project, not root"
 
-platinum.worktrees/GOS-789012/CLAUDE.md — unchanged
-platinum/CLAUDE.md — unchanged (stale deploy, no direct edits)
+anvil.worktrees/GOS-789012/CLAUDE.md — unchanged
+anvil/CLAUDE.md — unchanged (stale deploy, no direct edits)
 
 Accept changes? [y/n/interactive]
 ```
 
-Approved changes are merged back into `~/.loom/projects/platinum/` (or `~/.loom/global/` if flagged as global).
+Approved changes are merged back into `~/.loom/projects/anvil/` (or `~/.loom/global/` if flagged as global).
 
 **AI-assisted mode (`loom harvest --extract`):**
 Spawns an agent that categorises each diff:
@@ -208,10 +210,10 @@ The Loom folder is its own git repo. Every significant action commits:
 
 ```
 git log --oneline
-a1b2c3d harvest: platinum +3 changes (2026-03-16 16:00)
-e4f5g6h deploy: platinum @h7i8j9k (2026-03-16 14:30)
-h7i8j9k compile: platinum (2026-03-16 14:30)
-b0c1d2e compile: platinum, ifreedom (2026-03-16 10:15)
+a1b2c3d harvest: anvil +3 changes (2026-03-16 16:00)
+e4f5g6h deploy: anvil @h7i8j9k (2026-03-16 14:30)
+h7i8j9k compile: anvil (2026-03-16 14:30)
+b0c1d2e compile: anvil, spark (2026-03-16 10:15)
 f3g4h5i loom init (2026-03-16 09:00)
 ```
 
@@ -229,7 +231,7 @@ Loom replaces SDP. The migration path:
 2. Copy SDP source skills (`src/skills/*.md`) → `~/.loom/global/skills/`
 3. Copy SDP agents (`src/agents/*.md`) → `~/.loom/global/agents/`
 4. Extract conventions from SDP's compiled instruction files → `~/.loom/global/instructions/`
-5. Register projects: `loom register platinum D:\git\platinum`
+5. Register projects: `loom register anvil D:\git\anvil`
 6. Add project-specific skills that were previously tribal knowledge
 7. `loom compile && loom deploy`
 8. Retire SDP
