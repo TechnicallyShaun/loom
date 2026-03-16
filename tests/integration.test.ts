@@ -96,11 +96,11 @@ describe("full pipeline: init → register → compile → deploy → diff → d
     ).toBe(true);
     expect(
       fs.existsSync(
-        path.join(compiledDir, ".github", "copilot", "skills", "analyse", "SKILL.md"),
+        path.join(compiledDir, ".github", "skills", "analyse", "SKILL.md"),
       ),
     ).toBe(true);
     expect(
-      fs.existsSync(path.join(compiledDir, ".github", "copilot", "agents", "work.md")),
+      fs.existsSync(path.join(compiledDir, ".github", "agents", "work.agent.md")),
     ).toBe(true);
 
     // Codex output

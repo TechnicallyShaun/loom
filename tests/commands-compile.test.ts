@@ -72,7 +72,7 @@ describe("compile command", () => {
     expect(claudeMd).toContain("Anvil Specifics");
   });
 
-  it("compiles skills to .claude/skills/ and .github/copilot/skills/", async () => {
+  it("compiles skills to .claude/skills/ and .github/skills/", async () => {
     writeFile(
       path.join(loomDir, "global", "skills", "analyse", "SKILL.md"),
       "# Analyse\n\nDo analysis.",
@@ -92,7 +92,6 @@ describe("compile command", () => {
           ".compiled",
           "anvil",
           ".github",
-          "copilot",
           "skills",
           "analyse",
           "SKILL.md",

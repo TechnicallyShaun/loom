@@ -136,8 +136,8 @@ Without a project arg, compiles all registered projects.
 | Source | Claude Code | Copilot | Codex | Gemini |
 |--------|------------|---------|-------|--------|
 | `instructions/*.md` | `CLAUDE.md` (concatenated) | `.github/copilot-instructions.md` | `AGENTS.md` | `GEMINI.md` |
-| `skills/foo/SKILL.md` | `.claude/skills/foo/SKILL.md` | `.github/copilot/skills/foo/SKILL.md` | — | — |
-| `agents/work.md` | `.claude/agents/work.md` (subagent file) | `.github/copilot/agents/work.md` | — | — |
+| `skills/foo/SKILL.md` | `.claude/skills/foo/SKILL.md` | `.github/skills/foo/SKILL.md` | — | — |
+| `agents/work.md` | `.claude/agents/work.md` (subagent file) | `.github/agents/work.agent.md` | — | — |
 
 **Merge rules:**
 - Instructions: global files first, then project files, concatenated into one output file per target
@@ -155,8 +155,8 @@ Copies compiled output to the registered project path. Creates a commit/tag in t
 compile output → D:\git\anvil\CLAUDE.md
               → D:\git\anvil\.claude\skills\*
               → D:\git\anvil\.github\copilot-instructions.md
-              → D:\git\anvil\.github\copilot\agents\*
-              → D:\git\anvil\.github\copilot\skills\*
+              → D:\git\anvil\.github\agents\*
+              → D:\git\anvil\.github\skills\*
 ```
 
 **Git:** Creates commit: `deploy: <project> @<compile-hash> (<timestamp>)`

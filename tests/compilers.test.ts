@@ -74,17 +74,17 @@ describe("compileCopilot", () => {
     expect(instr!.content).toContain("Instructions");
   });
 
-  it("produces skill files under .github/copilot/skills/", () => {
+  it("produces skill files under .github/skills/", () => {
     const files = compileCopilot(makeProject());
     const skill = files.find(
-      (f) => f.relativePath === ".github/copilot/skills/analyse/SKILL.md",
+      (f) => f.relativePath === ".github/skills/analyse/SKILL.md",
     );
     expect(skill).toBeDefined();
   });
 
-  it("produces agent files under .github/copilot/agents/", () => {
+  it("produces agent files under .github/agents/ with .agent.md extension", () => {
     const files = compileCopilot(makeProject());
-    const agent = files.find((f) => f.relativePath === ".github/copilot/agents/work.md");
+    const agent = files.find((f) => f.relativePath === ".github/agents/work.agent.md");
     expect(agent).toBeDefined();
     expect(agent!.content).toContain("Orchestrate work");
   });
