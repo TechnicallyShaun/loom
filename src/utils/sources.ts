@@ -56,3 +56,17 @@ export function concatInstructions(global: SourceContent[], project: SourceConte
 export function ensureDir(dir: string): void {
   fs.mkdirSync(dir, { recursive: true });
 }
+
+/** Recursively walk a directory, returning relative file paths */
+export function walkDir(dir: string, prefix = ""): string[] {
+  const results: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const rel = path.join(prefix, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...walkDir(path.join(dir, entry.name), rel));
+    } else {
+      results.push(rel);
+    }
+  }
+  return results;
+}

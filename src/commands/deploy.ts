@@ -3,7 +3,7 @@ import path from "node:path";
 import { loomDir, compiledDir, timestamp } from "../utils/paths.js";
 import { loadConfig } from "../config/loader.js";
 import { gitCommit, getShortHash } from "../utils/git.js";
-import { ensureDir } from "../utils/sources.js";
+import { ensureDir, walkDir } from "../utils/sources.js";
 
 export async function deploy(args: string[]): Promise<void> {
   const dir = loomDir();
@@ -68,15 +68,4 @@ export async function deploy(args: string[]): Promise<void> {
   }
 }
 
-function walkDir(dir: string, prefix = ""): string[] {
-  const results: string[] = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const rel = path.join(prefix, entry.name);
-    if (entry.isDirectory()) {
-      results.push(...walkDir(path.join(dir, entry.name), rel));
-    } else {
-      results.push(rel);
-    }
-  }
-  return results;
-}
+

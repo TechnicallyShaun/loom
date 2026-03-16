@@ -4,6 +4,7 @@ import readline from "node:readline";
 import { loomDir, compiledDir, timestamp } from "../utils/paths.js";
 import { loadConfig } from "../config/loader.js";
 import { gitCommit } from "../utils/git.js";
+import { walkDir } from "../utils/sources.js";
 
 interface Change {
   location: string;
@@ -112,18 +113,18 @@ function diffLocation(location: string, compiledOutDir: string): Change[] {
   const filesToCheck = ["CLAUDE.md", ".github/copilot-instructions.md", "AGENTS.md", "GEMINI.md"];
 
   // Also check for skill and agent files
-  for (const skillDir of [".claude/skills", ".github/copilot/skills"]) {
+  for (const skillDir of [".claude/skills", ".github/skills"]) {
     const fullDir = path.join(location, skillDir);
     if (fs.existsSync(fullDir)) {
-      walkFiles(fullDir).forEach((f) => {
+      walkDir(fullDir).forEach((f) => {
         filesToCheck.push(path.join(skillDir, f));
       });
     }
   }
-  for (const agentDir of [".github/copilot/agents"]) {
+  for (const agentDir of [".claude/agents", ".github/agents"]) {
     const fullDir = path.join(location, agentDir);
     if (fs.existsSync(fullDir)) {
-      walkFiles(fullDir).forEach((f) => {
+      walkDir(fullDir).forEach((f) => {
         filesToCheck.push(path.join(agentDir, f));
       });
     }
@@ -189,18 +190,7 @@ function applyChange(
   }
 }
 
-function walkFiles(dir: string, prefix = ""): string[] {
-  const results: string[] = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const rel = path.join(prefix, entry.name);
-    if (entry.isDirectory()) {
-      results.push(...walkFiles(path.join(dir, entry.name), rel));
-    } else {
-      results.push(rel);
-    }
-  }
-  return results;
-}
+
 
 function ask(question: string): Promise<string> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

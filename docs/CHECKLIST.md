@@ -13,8 +13,8 @@
 
 ## Phase 2: Research & Verify Compiler Output
 - [x] Research CURRENT Claude Code skill format (March 2026) — `.claude/skills/`, SKILL.md frontmatter options, agent:true, context:fork, allowed-tools. Update claude compiler if needed.
-- [ ] Research CURRENT GitHub Copilot CLI skill/agent format (March 2026) — `.github/copilot/`, agent format, skills format. Update copilot compiler if needed.
-- [ ] Verify compile output matches real native format for both targets
+- [x] Research CURRENT GitHub Copilot CLI skill/agent format (March 2026) — skills at `.github/skills/`, agents at `.github/agents/*.agent.md`. Updated compiler + tests.
+- [x] Verify compile output matches real native format for both targets
 
 ## Phase 3: Quality Review
 - [ ] Review all source files for modularity — small single-purpose functions, clean interfaces
