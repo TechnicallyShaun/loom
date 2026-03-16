@@ -12,7 +12,7 @@
 - [x] ESLint + Prettier configured
 
 ## Phase 2: Research & Verify Compiler Output
-- [ ] Research CURRENT Claude Code skill format (March 2026) — `.claude/skills/`, SKILL.md frontmatter options, agent:true, context:fork, allowed-tools. Update claude compiler if needed.
+- [x] Research CURRENT Claude Code skill format (March 2026) — `.claude/skills/`, SKILL.md frontmatter options, agent:true, context:fork, allowed-tools. Update claude compiler if needed.
 - [ ] Research CURRENT GitHub Copilot CLI skill/agent format (March 2026) — `.github/copilot/`, agent format, skills format. Update copilot compiler if needed.
 - [ ] Verify compile output matches real native format for both targets
 
