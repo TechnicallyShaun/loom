@@ -36,28 +36,28 @@ describe("compileClaude", () => {
     expect(skill!.content).toContain("Analyse everything");
   });
 
-  it("produces agent files with agent:true frontmatter", () => {
+  it("produces agent files under .claude/agents/", () => {
     const files = compileClaude(makeProject());
-    const agent = files.find((f) => f.relativePath === ".claude/skills/work/SKILL.md");
+    const agent = files.find((f) => f.relativePath === ".claude/agents/work.md");
     expect(agent).toBeDefined();
-    expect(agent!.content).toContain("agent: true");
-    expect(agent!.content).toContain("---");
     expect(agent!.content).toContain("Orchestrate work");
   });
 
-  it("injects into existing frontmatter", () => {
+  it("preserves existing frontmatter in agent files", () => {
     const project = makeProject({
       agents: [
         {
           name: "work",
-          content: "---\ntitle: Work\n---\n\nDo work.",
+          content: "---\ndescription: Orchestrate development work\nmodel: sonnet\n---\n\nDo work.",
         },
       ],
     });
     const files = compileClaude(project);
-    const agent = files.find((f) => f.relativePath === ".claude/skills/work/SKILL.md");
-    expect(agent!.content).toContain("agent: true");
-    expect(agent!.content).toContain("title: Work");
+    const agent = files.find((f) => f.relativePath === ".claude/agents/work.md");
+    expect(agent).toBeDefined();
+    expect(agent!.content).toContain("description: Orchestrate development work");
+    expect(agent!.content).toContain("model: sonnet");
+    expect(agent!.content).toContain("Do work.");
   });
 
   it("returns empty for no instructions", () => {

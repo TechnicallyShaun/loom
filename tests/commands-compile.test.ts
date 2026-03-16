@@ -127,10 +127,9 @@ describe("compile command", () => {
     await compile(["anvil"]);
 
     const agent = fs.readFileSync(
-      path.join(loomDir, ".compiled", "anvil", ".claude", "skills", "work", "SKILL.md"),
+      path.join(loomDir, ".compiled", "anvil", ".claude", "agents", "work.md"),
       "utf-8",
     );
-    expect(agent).toContain("agent: true");
     expect(agent).toContain("Work Agent");
   });
 

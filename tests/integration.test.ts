@@ -85,10 +85,10 @@ describe("full pipeline: init → register → compile → deploy → diff → d
     expect(analyseSkill).toContain("deep analysis");
 
     const workAgent = fs.readFileSync(
-      path.join(compiledDir, ".claude", "skills", "work", "SKILL.md"),
+      path.join(compiledDir, ".claude", "agents", "work.md"),
       "utf-8",
     );
-    expect(workAgent).toContain("agent: true");
+    expect(workAgent).toContain("Work Agent");
 
     // Copilot outputs
     expect(

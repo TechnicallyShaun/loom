@@ -137,7 +137,7 @@ Without a project arg, compiles all registered projects.
 |--------|------------|---------|-------|--------|
 | `instructions/*.md` | `CLAUDE.md` (concatenated) | `.github/copilot-instructions.md` | `AGENTS.md` | `GEMINI.md` |
 | `skills/foo/SKILL.md` | `.claude/skills/foo/SKILL.md` | `.github/copilot/skills/foo/SKILL.md` | — | — |
-| `agents/work.md` | `.claude/skills/work/SKILL.md` (with `agent: true` frontmatter) | `.github/copilot/agents/work.md` | — | — |
+| `agents/work.md` | `.claude/agents/work.md` (subagent file) | `.github/copilot/agents/work.md` | — | — |
 
 **Merge rules:**
 - Instructions: global files first, then project files, concatenated into one output file per target

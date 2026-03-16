@@ -12,6 +12,11 @@ export function compileClaude(project: MergedProject): CompiledFile[] {
   }
 
   // Skills → .claude/skills/<name>/SKILL.md
+  // Supported frontmatter (March 2026): name, description, argument-hint,
+  // disable-model-invocation, user-invocable, allowed-tools, model,
+  // context (fork), agent, hooks
+  // String substitutions: $ARGUMENTS, $ARGUMENTS[N], $N,
+  // ${CLAUDE_SESSION_ID}, ${CLAUDE_SKILL_DIR}
   for (const skill of project.skills) {
     files.push({
       relativePath: `.claude/skills/${skill.name}/SKILL.md`,
@@ -19,25 +24,19 @@ export function compileClaude(project: MergedProject): CompiledFile[] {
     });
   }
 
-  // Agents → .claude/skills/<name>/SKILL.md with agent:true frontmatter
+  // Agents → .claude/agents/<name>.md
+  // Claude Code subagents live in .claude/agents/ (not skills with agent:true).
+  // Supported frontmatter (March 2026): name, description, tools,
+  // disallowedTools, model (sonnet|opus|haiku|inherit|full-id),
+  // permissionMode (default|acceptEdits|dontAsk|bypassPermissions|plan),
+  // mcpServers, hooks, maxTurns, skills, memory
+  // Body becomes the subagent's system prompt.
   for (const agent of project.agents) {
-    const content = agent.content.startsWith("---")
-      ? injectFrontmatter(agent.content, "agent: true")
-      : `---\nagent: true\n---\n\n${agent.content}\n`;
     files.push({
-      relativePath: `.claude/skills/${agent.name}/SKILL.md`,
-      content,
+      relativePath: `.claude/agents/${agent.name}.md`,
+      content: agent.content + "\n",
     });
   }
 
   return files;
-}
-
-function injectFrontmatter(content: string, injection: string): string {
-  // Insert agent: true into existing frontmatter
-  const endIdx = content.indexOf("---", 3);
-  if (endIdx === -1) return content;
-  const front = content.slice(0, endIdx).trim();
-  const body = content.slice(endIdx + 3);
-  return `${front}\n${injection}\n---${body}`;
 }
