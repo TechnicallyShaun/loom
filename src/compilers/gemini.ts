@@ -1,10 +1,15 @@
-import type { Skill, CompiledOutput } from "../types/index.js";
+import type { MergedProject, CompiledFile } from "../types/index.js";
 
-export function compileGemini(skills: Skill[]): CompiledOutput {
-  // TODO: Assemble skills into GEMINI.md format
-  return {
-    targetType: "gemini",
-    fileName: "GEMINI.md",
-    content: "",
-  };
+export function compileGemini(project: MergedProject): CompiledFile[] {
+  const files: CompiledFile[] = [];
+
+  // Instructions only → GEMINI.md
+  if (project.instructions) {
+    files.push({
+      relativePath: "GEMINI.md",
+      content: project.instructions + "\n",
+    });
+  }
+
+  return files;
 }
