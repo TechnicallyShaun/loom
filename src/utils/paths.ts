@@ -1,14 +1,38 @@
+import fs from "node:fs";
 import path from "node:path";
-import os from "node:os";
 
-/** Default loom home directory */
-export function defaultLoomDir(): string {
-  return path.join(os.homedir(), ".loom");
+function isLoomRoot(dir: string): boolean {
+  return (
+    fs.existsSync(path.join(dir, "config.yaml")) &&
+    fs.existsSync(path.join(dir, "global")) &&
+    fs.existsSync(path.join(dir, "projects"))
+  );
 }
 
-/** Resolve loom dir — uses LOOM_DIR env var or defaults to ~/.loom */
-export function loomDir(): string {
-  return process.env.LOOM_DIR || defaultLoomDir();
+function findNearestLoomDir(fromDir: string): string | null {
+  let current = path.resolve(fromDir);
+
+  while (true) {
+    // Support both "repo/.loom" and direct loom roots (when LOOM_DIR was set to cwd)
+    const nested = path.join(current, ".loom");
+    if (isLoomRoot(nested)) return nested;
+    if (isLoomRoot(current)) return current;
+
+    const parent = path.dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+}
+
+/** Default loom directory (local to current working tree) */
+export function defaultLoomDir(cwd = process.cwd()): string {
+  return path.join(cwd, ".loom");
+}
+
+/** Resolve loom dir — LOOM_DIR env var, then nearest local loom dir, then ./\.loom */
+export function loomDir(cwd = process.cwd()): string {
+  if (process.env.LOOM_DIR) return process.env.LOOM_DIR;
+  return findNearestLoomDir(cwd) || defaultLoomDir(cwd);
 }
 
 /** Global source directories */

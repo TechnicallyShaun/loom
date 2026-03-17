@@ -37,7 +37,7 @@ async function main() {
 loom — weave AI skills once, compile to every coding agent.
 
 Usage:
-  loom init                         Create ~/.loom/ with starter structure
+  loom init                         Create ./.loom/ with starter structure
   loom register <name> <path>       Register a project for compilation
   loom compile [project]            Compile source to target-specific output
   loom deploy [project]             Copy compiled output to project paths

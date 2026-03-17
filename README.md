@@ -40,7 +40,7 @@ npm install && npm run build && npm link
 ## Quick Start
 
 ```bash
-# 1. Initialise (creates ~/.loom/ with git tracking)
+# 1. Initialise (creates ./.loom/ with git tracking)
 loom init
 
 # 2. Register a project
@@ -48,11 +48,11 @@ loom register myproject /path/to/project
 
 # 3. Add some content
 # Global instructions (apply to all projects):
-echo "# Team Conventions\n\nUse conventional commits." > ~/.loom/global/instructions/conventions.md
+echo "# Team Conventions\n\nUse conventional commits." > ./.loom/global/instructions/conventions.md
 
 # Global skill:
-mkdir -p ~/.loom/global/skills/analyse
-echo "# Analyse\n\nAnalyse the ticket and create a plan." > ~/.loom/global/skills/analyse/SKILL.md
+mkdir -p ./.loom/global/skills/analyse
+echo "# Analyse\n\nAnalyse the ticket and create a plan." > ./.loom/global/skills/analyse/SKILL.md
 
 # 4. Compile (produces target-specific output)
 loom compile
@@ -68,7 +68,7 @@ loom harvest
 
 | Command | Description |
 |---------|-------------|
-| `loom init` | Create `~/.loom/` with folder structure and git repo |
+| `loom init` | Create `./.loom/` with folder structure and git repo |
 | `loom register <name> <path>` | Register a project for compilation |
 | `loom compile [project]` | Compile source to target-specific output |
 | `loom deploy [project]` | Copy compiled output to project paths |
@@ -81,7 +81,7 @@ All multi-project commands accept an optional project name. Without it, they run
 ## Source Structure
 
 ```
-~/.loom/
+./.loom/
 ├── config.yaml              # Registered projects (gitignored)
 ├── global/
 │   ├── instructions/        # Always-loaded context (→ CLAUDE.md, copilot-instructions.md, etc.)
