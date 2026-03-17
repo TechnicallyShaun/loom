@@ -17,8 +17,9 @@ beforeEach(() => {
 
   // Register a project
   saveConfig(loomDir, {
+    targets: ["claude", "copilot"],
     projects: {
-      anvil: { path: projectPath, targets: ["claude", "copilot"] },
+      anvil: { path: projectPath },
     },
   });
 
@@ -129,9 +130,10 @@ describe("compile command", () => {
     // Add a second project
     const project2 = makeTempDir();
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        anvil: { path: projectPath, targets: ["claude"] },
-        spark: { path: project2, targets: ["claude"] },
+        anvil: { path: projectPath },
+        spark: { path: project2 },
       },
     });
     fs.mkdirSync(path.join(loomDir, "projects", "spark", "instructions"), { recursive: true });

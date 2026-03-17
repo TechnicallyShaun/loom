@@ -1,41 +1,33 @@
-# Loom CLI — Command Reference
+# Command Reference
 
-Complete reference for all Loom commands, flags, and variations.
+All commands that accept `[project]` run against all registered projects when no project name is given.
 
 ---
 
 ## `loom init`
 
-Initialise a new Loom workspace.
+Initialise a new Loom workspace in the current directory.
 
-**Usage:**
 ```bash
 loom init
 ```
 
-**What it does:**
-1. Creates the folder structure at `~/.loom/` (or `$LOOM_DIR` if set):
-   ```
-   ~/.loom/
-   ├── config.yaml          # Project registry (gitignored)
-   ├── .gitignore            # Ignores config.yaml
-   ├── global/
-   │   ├── instructions/     # Always-loaded context
-   │   ├── skills/           # On-demand capabilities
-   │   ├── agents/           # Workflow orchestrators
-   │   └── tools/            # Reference docs (not compiled)
-   └── projects/
-   ```
-2. Runs `git init` to create a versioned workspace
-3. Creates an initial commit: `loom init`
+Creates the folder structure, `config.yaml`, and a git repo inside `.loom/`:
 
-**Notes:**
-- Idempotent — running twice won't reinitialise
-- Empty directories get `.gitkeep` files so git tracks the structure
-- `config.yaml` is gitignored because it contains real project paths
+```
+.loom/
+├── config.yaml
+├── .gitignore
+├── global/
+│   ├── instructions/
+│   ├── skills/
+│   └── agents/
+└── projects/
+```
 
-**Environment:**
-- `LOOM_DIR` — Override the default `~/.loom/` location (useful for testing or multiple workspaces)
+`config.yaml` is gitignored because it contains local paths. Everything else is tracked.
+
+**Environment variable:** Set `LOOM_DIR` to override the default `.loom/` location.
 
 ---
 
@@ -43,79 +35,52 @@ loom init
 
 Register a project for compilation and deployment.
 
-**Usage:**
 ```bash
-loom register <name> <path> [--targets <targets>]
+loom register myproject /path/to/project
 ```
-
-**Arguments:**
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `name` | Yes | Codename for the project (e.g. `anvil`, `spark`) |
-| `path` | Yes | Absolute or relative path to the project directory |
+| `name` | Yes | Short name for the project (e.g. `anvil`, `api`) |
+| `path` | Yes | Path to the project directory (must exist) |
 
-**Flags:**
+What it does:
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--targets <list>` | `claude,copilot` | Comma-separated list of compile targets |
+1. Adds the project to `config.yaml`
+2. Creates `projects/<name>/instructions/`, `projects/<name>/skills/`, `projects/<name>/agents/` with `.gitkeep` files
+3. Commits: `register: <name>`
 
-**Valid targets:** `claude`, `copilot`, `codex`, `gemini`
-
-**Examples:**
 ```bash
-# Register with default targets (claude + copilot)
+# Examples
 loom register anvil D:\git\myproject
-
-# Register with specific targets
-loom register spark /home/user/project --targets claude,copilot,codex
-
-# Register for Gemini only
-loom register tools ~/tools-repo --targets gemini
+loom register api ~/code/api-service
 ```
-
-**What it does:**
-1. Resolves the path to an absolute path
-2. Adds the project to `config.yaml`
-3. Scaffolds `projects/<name>/{instructions,skills,agents,tools}/` with `.gitkeep` files
-4. Commits: `register: <name>`
-
-**Notes:**
-- The path must exist
-- Loom must be initialised first (`loom init`)
-- Re-registering updates the existing entry
 
 ---
 
 ## `loom compile [project]`
 
-Compile source files into target-specific output.
+Merge global and project source layers, then compile to target-specific output.
 
-**Usage:**
 ```bash
-loom compile            # Compile all registered projects
-loom compile anvil      # Compile a specific project
+loom compile            # Compile all projects
+loom compile myproject  # Compile one project
 ```
-
-**Arguments:**
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `project` | No | Project name to compile. Omit to compile all. |
+| `project` | No | Compile only this project |
 
-**What it does:**
-1. Reads global source files from `global/{instructions,skills,agents}/`
-2. Reads project source files from `projects/<name>/{instructions,skills,agents}/`
-3. Merges the two layers:
-   - **Instructions:** Concatenated (global first, then project, separated by `---`)
-   - **Skills:** Project overrides global (same name = project wins)
-   - **Agents:** Project overrides global (same name = project wins)
-4. Runs each enabled compiler to produce native output files
+The compile step:
+
+1. Reads global source from `global/{instructions,skills,agents}/`
+2. Reads project source from `projects/<name>/{instructions,skills,agents}/`
+3. Merges the two layers (see [Content Guide](content-guide.md) for merge rules)
+4. Generates target-specific files for each enabled target
 5. Writes output to `.compiled/<project>/`
 6. Commits: `compile: <project> (<timestamp>)`
 
-**Compile targets:**
+**Output per target:**
 
 | Target | Instructions | Skills | Agents |
 |--------|-------------|--------|--------|
@@ -124,126 +89,100 @@ loom compile anvil      # Compile a specific project
 | Codex | `AGENTS.md` | — | — |
 | Gemini | `GEMINI.md` | — | — |
 
-**Notes:**
-- Previous compiled output is cleaned before writing (stale files removed)
-- Compiled output is committed to the Loom git repo for auditability
-- Tools are reference docs — they are NOT compiled into output
-
 ---
 
 ## `loom deploy [project]`
 
-Copy compiled output to registered project locations.
+Copy compiled output to the registered project paths.
 
-**Usage:**
 ```bash
-loom deploy             # Deploy all registered projects
-loom deploy anvil       # Deploy a specific project
+loom deploy            # Deploy all projects
+loom deploy myproject  # Deploy one project
 ```
-
-**Arguments:**
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `project` | No | Project name to deploy. Omit to deploy all. |
+| `project` | No | Deploy only this project |
 
-**What it does:**
-1. Reads compiled output from `.compiled/<project>/`
-2. Copies each file to the registered project path
-3. Appends to `.deploy-log` with timestamp and hash
+What it does:
+
+1. Copies files from `.compiled/<project>/` to the registered project path
+2. Creates directories as needed
+3. Logs the deploy to `.deploy-log`
 4. Commits: `deploy: <project> @<hash> (<timestamp>)`
-5. Creates a git tag: `deploy/<project>/<timestamp>` (for easy rollback)
+5. Creates a git tag: `deploy/<project>/<timestamp>`
 
-**Example:**
-```bash
-loom compile anvil && loom deploy anvil
-```
+After deploying, the project directory will contain the target-specific files:
 
-After deploy, the project directory has:
 ```
-D:\git\myproject\
+/path/to/project/
 ├── CLAUDE.md
+├── AGENTS.md
+├── GEMINI.md
 ├── .claude/
 │   ├── skills/analyse/SKILL.md
 │   └── agents/work.md
-├── .github/
-│   ├── copilot-instructions.md
-│   ├── skills/analyse/SKILL.md
-│   └── agents/work.agent.md
-├── AGENTS.md
-└── GEMINI.md
+└── .github/
+    ├── copilot-instructions.md
+    ├── skills/analyse/SKILL.md
+    └── agents/work.agent.md
 ```
 
-**Notes:**
-- Project must be compiled first
-- Skips projects with no compiled output
-- Does NOT remove stale files at the target (if you delete a skill from source, manually remove the old deployed file)
+The project must be compiled first — deploy skips projects with no compiled output.
 
 ---
 
-## `loom harvest [project]`
+## `loom harvest [project] [--yes]`
 
-Scan for changes made to deployed files and merge them back to source.
+Scan deployed locations for changes and merge them back to source.
 
-**Usage:**
 ```bash
-loom harvest            # Harvest all registered projects
-loom harvest anvil      # Harvest a specific project
-loom harvest --yes      # Auto-accept all changes (no prompt)
-loom harvest anvil --yes
+loom harvest              # Harvest all projects (interactive)
+loom harvest myproject    # Harvest one project
+loom harvest --yes        # Auto-accept all changes
+loom harvest myproject --yes
 ```
-
-**Arguments:**
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `project` | No | Project name to harvest. Omit to harvest all. |
-
-**Flags:**
+| `project` | No | Harvest only this project |
 
 | Flag | Description |
 |------|-------------|
-| `--yes` | Auto-accept all changes without prompting. Useful for scripting/CI. |
+| `--yes` | Accept all changes without prompting |
 
-**What it does:**
-1. For each project, finds all locations to scan:
-   - The registered project path (main checkout)
-   - Any `<project>.worktrees/*/` sibling directories
-2. Diffs each location's instruction/skill/agent files against the compiled output
-3. Displays additions found in each file
-4. Prompts for approval (unless `--yes`)
-5. Merges approved changes back to the Loom source:
-   - Instruction files → `projects/<name>/instructions/harvested.md`
-   - Skill files → `projects/<name>/skills/<skillname>/SKILL.md`
-   - Agent files → `projects/<name>/agents/<agentname>.md`
-6. Commits: `harvest: <project> +N changes (<timestamp>)`
+What it does:
 
-**Worktree scanning:**
+1. Scans the registered project path and any worktree siblings (`<project>.worktrees/*/`)
+2. Diffs deployed instruction, skill, and agent files against compiled output
+3. Shows detected additions for review
+4. On approval, merges changes back to the Loom source:
+   - Instruction changes go to `projects/<name>/instructions/harvested.md`
+   - Skill changes go to `projects/<name>/skills/<skill>/SKILL.md`
+   - Agent changes go to `projects/<name>/agents/<agent>.md`
+5. Commits: `harvest: <project> +N changes (<timestamp>)`
 
-Loom automatically finds worktree siblings. If your project is at `D:\git\myproject`, it scans `D:\git\myproject.worktrees/*/` for any worktree directories.
+**Worktree scanning** — if your project is at `/code/myproject`, Loom also scans `/code/myproject.worktrees/*/`:
 
 ```
-D:\git\
-├── myproject/                    ← main checkout (scanned)
+/code/
+├── myproject/                  ← scanned
 └── myproject.worktrees/
-    ├── GOS-123456/               ← worktree (scanned)
-    └── GOS-789012/               ← worktree (scanned)
+    ├── feature-branch-1/       ← scanned
+    └── feature-branch-2/       ← scanned
 ```
 
 **Example output:**
-```
-anvil: found 2 changed file(s):
 
-  D:\git\myproject.worktrees\GOS-123456/CLAUDE.md:
-    + Always check EF migrations after switching branches
-    + PropertyFacade requires both Amount and TaxCode
+```
+myproject: found 2 changed file(s):
+
+  /code/myproject.worktrees/feature-branch-1/CLAUDE.md:
+    + Always run migrations after switching branches
+    + Use PropertyFacade for all tax calculations
 
 Accept changes? [y/n]
 ```
-
-**Notes:**
-- Diffs are line-level additions only (doesn't detect reordered or deleted lines)
-- Only names projects with accepted changes in the commit message
 
 ---
 
@@ -251,100 +190,61 @@ Accept changes? [y/n]
 
 Preview what `deploy` would change without writing anything.
 
-**Usage:**
 ```bash
-loom diff               # Diff all registered projects
-loom diff anvil         # Diff a specific project
+loom diff              # Diff all projects
+loom diff myproject    # Diff one project
 ```
-
-**Arguments:**
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `project` | No | Project name to diff. Omit to diff all. |
+| `project` | No | Diff only this project |
 
-**What it does:**
-1. Compares compiled output against what's currently at the deploy target
-2. Shows new files (`+`), modified files (`~`), and unchanged files
+Shows new files (`+`) and modified files (`~`):
 
-**Example output:**
 ```
-anvil:
+myproject:
   + .claude/skills/setup-env/SKILL.md (new)
   ~ CLAUDE.md (modified)
   (2 file(s) would change)
 ```
 
-**Notes:**
-- Read-only — no files are written
-- Run after `compile` and before `deploy` to review changes
+Run after `compile` and before `deploy` to review changes before they land.
 
 ---
 
 ## `loom discover`
 
-Show registered projects and their status.
+Show registered projects and their current status.
 
-**Usage:**
 ```bash
 loom discover
 ```
 
-**What it does:**
-1. Lists all registered projects from `config.yaml`
-2. Shows each project's path, enabled targets, compiled status
-3. Shows last compile and deploy from git log
+Displays the Loom home directory, configured targets, and for each project: its path, whether it's been compiled, and the last compile/deploy commits.
 
-**Example output:**
 ```
 Loom home: /home/user/.loom
 
 2 project(s) registered:
 
-  anvil
-    Path:    D:\git\myproject
-    Targets: claude, copilot
+  myproject
+    Path:     /code/myproject
     Compiled: yes
-    Last compile: f3ccc6e compile: anvil (2026-03-16 22:30)
-    Last deploy: b6bccee deploy: anvil @f3ccc6e (2026-03-16 22:35)
+    Last compile: f3ccc6e compile: myproject (2026-03-16 22:30)
+    Last deploy:  b6bccee deploy: myproject @f3ccc6e (2026-03-16 22:35)
 
-  spark
-    Path:    D:\git\otherproject
-    Targets: claude, copilot, codex
+  api
+    Path:     /code/api-service
     Compiled: no
 ```
 
 ---
 
-## Global Environment Variables
+## Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LOOM_DIR` | `~/.loom` | Override the Loom workspace location |
-
----
-
-## Source File Conventions
-
-### Instructions
-- Location: `global/instructions/*.md` or `projects/<name>/instructions/*.md`
-- Format: Plain markdown files, any name
-- Compiled: Concatenated into one file per target (global first, then project)
-
-### Skills
-- Location: `global/skills/<name>/SKILL.md` or `projects/<name>/skills/<name>/SKILL.md`
-- Format: Markdown with optional YAML frontmatter (`name`, `description`, `argument-hint`)
-- Compiled: One file per skill per target that supports skills
-
-### Agents
-- Location: `global/agents/<name>.md` or `projects/<name>/agents/<name>.md`
-- Format: Markdown with optional YAML frontmatter (target-specific options)
-- Compiled: One file per agent per target that supports agents
-
-### Tools
-- Location: `global/tools/*.md` or `projects/<name>/tools/*.md`
-- Format: Plain markdown reference docs
-- **Not compiled** — these are reference docs that skills point to. The actual scripts/executables live in your project repo.
+| `LOOM_DIR` | `./.loom` | Override the Loom workspace location |
 
 ---
 
@@ -353,29 +253,25 @@ Loom home: /home/user/.loom
 ```bash
 # One-time setup
 loom init
-loom register anvil D:\git\myproject
-loom register spark D:\git\otherproject
+loom register myproject /code/myproject
 
-# Author skills in ~/.loom/
-# (edit global/instructions, global/skills, projects/anvil/skills, etc.)
+# Author content in .loom/ (instructions, skills, agents)
 
 # Build and deploy
 loom compile
-loom diff              # Review before deploying
+loom diff          # Review changes
 loom deploy
 
-# Work on a ticket using worktrees...
-# AI learns things, modifies CLAUDE.md in the worktree...
+# Work on a ticket... AI learns things, edits CLAUDE.md...
 
 # Pull learnings back
-loom harvest           # Interactive review
-loom harvest --yes     # Or auto-accept
+loom harvest
 
 # Check status
 loom discover
 
 # Rollback a bad deploy
-git -C ~/.loom log --oneline    # Find the commit
-git -C ~/.loom revert <hash>    # Undo it
-loom deploy                      # Redeploy clean version
+git -C .loom log --oneline     # Find the commit
+git -C .loom revert <hash>     # Undo it
+loom deploy                     # Redeploy clean version
 ```

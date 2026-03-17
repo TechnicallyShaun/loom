@@ -54,8 +54,9 @@ describe("missing folders", () => {
   it("compile succeeds when project instructions dir is missing", async () => {
     const projectPath = makeTempDir();
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        ghost: { path: projectPath, targets: ["claude"] },
+        ghost: { path: projectPath },
       },
     });
     // Don't create projects/ghost/instructions — it's missing
@@ -67,8 +68,9 @@ describe("missing folders", () => {
   it("compile with no global instructions produces output from project instructions only", async () => {
     const projectPath = makeTempDir();
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        minimal: { path: projectPath, targets: ["claude"] },
+        minimal: { path: projectPath },
       },
     });
     fs.mkdirSync(path.join(loomDir, "projects", "minimal", "instructions"), { recursive: true });
@@ -90,8 +92,9 @@ describe("missing folders", () => {
   it("deploy handles missing compiled directory gracefully", async () => {
     const projectPath = makeTempDir();
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        nocompile: { path: projectPath, targets: ["claude"] },
+        nocompile: { path: projectPath },
       },
     });
 
@@ -102,8 +105,9 @@ describe("missing folders", () => {
 
   it("harvest handles project with non-existent path gracefully", async () => {
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        phantom: { path: "/tmp/loom-nonexistent-path-12345", targets: ["claude"] },
+        phantom: { path: "/tmp/loom-nonexistent-path-12345" },
       },
     });
 
@@ -113,8 +117,9 @@ describe("missing folders", () => {
   it("diff handles missing compiled directory gracefully", async () => {
     const projectPath = makeTempDir();
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        nodiff: { path: projectPath, targets: ["claude"] },
+        nodiff: { path: projectPath },
       },
     });
 
@@ -164,8 +169,9 @@ describe("unknown project filter", () => {
   it("compile with unknown project name does not throw", async () => {
     const projectPath = makeTempDir();
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        real: { path: projectPath, targets: ["claude"] },
+        real: { path: projectPath },
       },
     });
 
@@ -176,8 +182,9 @@ describe("unknown project filter", () => {
   it("deploy with unknown project name does not throw", async () => {
     const projectPath = makeTempDir();
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        real: { path: projectPath, targets: ["claude"] },
+        real: { path: projectPath },
       },
     });
 
@@ -188,8 +195,9 @@ describe("unknown project filter", () => {
   it("harvest with unknown project name does not throw", async () => {
     const projectPath = makeTempDir();
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        real: { path: projectPath, targets: ["claude"] },
+        real: { path: projectPath },
       },
     });
 
@@ -200,8 +208,9 @@ describe("unknown project filter", () => {
   it("diff with unknown project name does not throw", async () => {
     const projectPath = makeTempDir();
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        real: { path: projectPath, targets: ["claude"] },
+        real: { path: projectPath },
       },
     });
 

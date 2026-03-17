@@ -20,7 +20,6 @@ export async function init(_args: string[]): Promise<void> {
     "global/instructions",
     "global/skills",
     "global/agents",
-    "global/tools",
     "projects",
   ]) {
     const subDir = path.join(dir, sub);
@@ -32,8 +31,8 @@ export async function init(_args: string[]): Promise<void> {
     }
   }
 
-  // Create empty config
-  const config: LoomConfig = { projects: {} };
+  // Create config with default targets
+  const config: LoomConfig = { targets: ["claude", "copilot", "codex", "gemini"], projects: {} };
   fs.writeFileSync(path.join(dir, "config.yaml"), stringify(config), "utf-8");
 
   // Create .gitignore — config.yaml contains real paths (not committed to public repo)

@@ -20,7 +20,8 @@ export async function discover(_args: string[]): Promise<void> {
     return;
   }
 
-  console.log(`Loom home: ${dir}\n`);
+  console.log(`Loom home: ${dir}`);
+  console.log(`Targets: ${config.targets.join(", ")}\n`);
   console.log(`${projectNames.length} project(s) registered:\n`);
 
   for (const name of projectNames) {
@@ -29,8 +30,7 @@ export async function discover(_args: string[]): Promise<void> {
     const compiled = fs.existsSync(outDir);
 
     console.log(`  ${name}`);
-    console.log(`    Path:    ${entry.path}`);
-    console.log(`    Targets: ${entry.targets.join(", ")}`);
+    console.log(`    Path:     ${entry.path}`);
     console.log(`    Compiled: ${compiled ? "yes" : "no"}`);
 
     // Last compile/deploy from git log

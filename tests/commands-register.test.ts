@@ -33,7 +33,6 @@ describe("register command", () => {
     const config = loadConfig(loomDir);
     expect(config.projects.anvil).toBeDefined();
     expect(config.projects.anvil.path).toBe(projectPath);
-    expect(config.projects.anvil.targets).toEqual(["claude", "copilot"]);
   });
 
   it("scaffolds project directories", async () => {
@@ -42,14 +41,15 @@ describe("register command", () => {
     expect(fs.existsSync(path.join(loomDir, "projects", "anvil", "instructions"))).toBe(true);
     expect(fs.existsSync(path.join(loomDir, "projects", "anvil", "skills"))).toBe(true);
     expect(fs.existsSync(path.join(loomDir, "projects", "anvil", "agents"))).toBe(true);
-    expect(fs.existsSync(path.join(loomDir, "projects", "anvil", "tools"))).toBe(true);
   });
 
-  it("supports custom targets", async () => {
-    await register(["anvil", projectPath, "--targets", "claude,codex,gemini"]);
+  it("uses config-level targets", async () => {
+    await register(["anvil", projectPath]);
 
     const config = loadConfig(loomDir);
-    expect(config.projects.anvil.targets).toEqual(["claude", "codex", "gemini"]);
+    // targets come from config level, not per-project
+    expect(config.targets).toBeDefined();
+    expect(config.projects.anvil.path).toBe(projectPath);
   });
 
   it("rejects non-existent paths", async () => {

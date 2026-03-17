@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { loomDir, globalDir, projectDir, compiledDir, timestamp } from "../utils/paths.js";
-import { loadConfig } from "../config/loader.js";
+import { loadConfig, validateTargets } from "../config/loader.js";
 import {
   readMarkdownDir,
   readSkillsDir,
@@ -17,6 +17,7 @@ import type { MergedProject, CompiledFile } from "../types/index.js";
 export async function compile(args: string[]): Promise<void> {
   const dir = loomDir();
   const config = loadConfig(dir);
+  validateTargets(config);
   const projectNames = Object.keys(config.projects);
 
   if (projectNames.length === 0) {
@@ -50,7 +51,7 @@ export async function compile(args: string[]): Promise<void> {
 
     const merged: MergedProject = {
       name,
-      targets: entry.targets,
+      targets: config.targets,
       projectPath: entry.path,
       instructions: concatInstructions(globalInstructions, projInstructions),
       skills: mergeLayers(globalSkills, projSkills),
@@ -59,7 +60,7 @@ export async function compile(args: string[]): Promise<void> {
 
     // Compile for each target
     const files: CompiledFile[] = [];
-    for (const target of entry.targets) {
+    for (const target of config.targets) {
       files.push(...compileForTarget(target, merged));
     }
 
@@ -76,7 +77,7 @@ export async function compile(args: string[]): Promise<void> {
     }
 
     compiled.push(name);
-    console.log(`Compiled ${name}: ${files.length} files for [${entry.targets.join(", ")}]`);
+    console.log(`Compiled ${name}: ${files.length} files for [${config.targets.join(", ")}]`);
   }
 
   gitCommit(dir, `compile: ${compiled.join(", ")} (${timestamp()})`);

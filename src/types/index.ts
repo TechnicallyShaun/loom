@@ -1,11 +1,13 @@
 export type TargetType = "claude" | "copilot" | "codex" | "gemini";
 
+export const VALID_TARGETS: TargetType[] = ["claude", "copilot", "codex", "gemini"];
+
 export interface ProjectEntry {
   path: string;
-  targets: TargetType[];
 }
 
 export interface LoomConfig {
+  targets: TargetType[];
   projects: Record<string, ProjectEntry>;
 }
 

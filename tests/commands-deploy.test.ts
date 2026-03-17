@@ -16,8 +16,9 @@ beforeEach(() => {
   process.env.LOOM_DIR = loomDir;
 
   saveConfig(loomDir, {
+    targets: ["claude", "copilot"],
     projects: {
-      anvil: { path: projectPath, targets: ["claude", "copilot"] },
+      anvil: { path: projectPath },
     },
   });
 });

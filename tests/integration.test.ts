@@ -53,8 +53,8 @@ describe("full pipeline: init → register → compile → deploy → diff → d
       "# Work Agent\n\nRead the plan, set up env, implement, test, commit.",
     );
 
-    // 3. Register
-    await register(["anvil", projectPath, "--targets", "claude,copilot,codex,gemini"]);
+    // 3. Register (uses config-level targets set by init)
+    await register(["anvil", projectPath]);
 
     const configContent = fs.readFileSync(path.join(loomHome, "config.yaml"), "utf-8");
     expect(configContent).toContain("anvil");
@@ -175,8 +175,8 @@ describe("full pipeline with harvest", () => {
     );
     writeFile(path.join(loomHome, "global", "agents", "work.md"), "# Work Agent\n\nDo the work.");
 
-    // 3. Register
-    await register(["anvil", projectPath, "--targets", "claude"]);
+    // 3. Register (uses config-level targets)
+    await register(["anvil", projectPath]);
 
     // 4. Compile
     await compile(["anvil"]);

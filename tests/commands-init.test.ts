@@ -30,7 +30,6 @@ describe("init command", () => {
     expect(fs.existsSync(path.join(tmpDir, "global", "instructions"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, "global", "skills"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, "global", "agents"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, "global", "tools"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, "projects"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, "config.yaml"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".gitignore"))).toBe(true);

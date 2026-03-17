@@ -33,8 +33,9 @@ afterEach(() => {
 describe("discover command", () => {
   it("shows registered projects", async () => {
     saveConfig(loomDir, {
+      targets: ["claude", "copilot"],
       projects: {
-        anvil: { path: projectPath, targets: ["claude", "copilot"] },
+        anvil: { path: projectPath },
       },
     });
 
@@ -55,8 +56,9 @@ describe("discover command", () => {
 
   it("shows compiled status", async () => {
     saveConfig(loomDir, {
+      targets: ["claude"],
       projects: {
-        anvil: { path: projectPath, targets: ["claude"] },
+        anvil: { path: projectPath },
       },
     });
     writeFile(path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"), "test");

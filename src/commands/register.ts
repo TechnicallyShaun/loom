@@ -4,12 +4,11 @@ import { loomDir } from "../utils/paths.js";
 import { loadConfig, saveConfig } from "../config/loader.js";
 import { ensureDir } from "../utils/sources.js";
 import { gitCommit } from "../utils/git.js";
-import type { TargetType } from "../types/index.js";
 
 export async function register(args: string[]): Promise<void> {
-  const [name, rawPath, ...rest] = args;
+  const [name, rawPath] = args;
   if (!name || !rawPath) {
-    console.log("Usage: loom register <name> <path> [--targets claude,copilot]");
+    console.log("Usage: loom register <name> <path>");
     return;
   }
 
@@ -25,20 +24,13 @@ export async function register(args: string[]): Promise<void> {
     return;
   }
 
-  // Parse targets flag
-  let targets: TargetType[] = ["claude", "copilot"];
-  const targetsIdx = rest.indexOf("--targets");
-  if (targetsIdx !== -1 && rest[targetsIdx + 1]) {
-    targets = rest[targetsIdx + 1].split(",") as TargetType[];
-  }
-
   // Update config
   const config = loadConfig(dir);
-  config.projects[name] = { path: projectPath, targets };
+  config.projects[name] = { path: projectPath };
   saveConfig(dir, config);
 
   // Scaffold project directories with .gitkeep so git tracks them
-  for (const sub of ["instructions", "skills", "agents", "tools"]) {
+  for (const sub of ["instructions", "skills", "agents"]) {
     const subDir = path.join(dir, "projects", name, sub);
     ensureDir(subDir);
     const gitkeep = path.join(subDir, ".gitkeep");
@@ -51,5 +43,5 @@ export async function register(args: string[]): Promise<void> {
   gitCommit(dir, `register: ${name}`);
 
   console.log(`Registered project "${name}" at ${projectPath}`);
-  console.log(`Targets: ${targets.join(", ")}`);
+  console.log(`Targets: ${config.targets.join(", ")} (from config defaults)`);
 }

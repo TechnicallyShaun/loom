@@ -59,9 +59,17 @@ describe("loomDir", () => {
 
   it("falls back to cwd/.loom when no local loom dir exists", () => {
     delete process.env.LOOM_DIR;
-    const tmp = mkTmp("loom-paths-fallback-");
-    process.chdir(tmp);
-    expect(loomDir()).toBe(path.join(tmp, ".loom"));
+    // Use a directory at the root of the filesystem so that walking up
+    // cannot find a stray .loom in any ancestor (e.g. the user's home).
+    const root = path.parse(process.cwd()).root;
+    const tmp = fs.mkdtempSync(path.join(root, "loom-paths-fallback-"));
+    try {
+      process.chdir(tmp);
+      expect(loomDir()).toBe(path.join(tmp, ".loom"));
+    } finally {
+      process.chdir(originalCwd);
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
 
