@@ -38,8 +38,7 @@ export function validateTargets(config: LoomConfig): void {
   const invalid = config.targets.filter((t: string) => !VALID_TARGETS.includes(t as TargetType));
   if (invalid.length > 0) {
     throw new Error(
-      `Unknown target(s): ${invalid.join(", ")}\n` +
-        `Valid targets: ${VALID_TARGETS.join(", ")}`,
+      `Unknown target(s): ${invalid.join(", ")}\n` + `Valid targets: ${VALID_TARGETS.join(", ")}`,
     );
   }
 }

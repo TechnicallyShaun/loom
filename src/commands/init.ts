@@ -16,12 +16,7 @@ export async function init(_args: string[]): Promise<void> {
 
   // Create directory structure
   ensureDir(dir);
-  for (const sub of [
-    "global/instructions",
-    "global/skills",
-    "global/agents",
-    "projects",
-  ]) {
+  for (const sub of ["global/instructions", "global/skills", "global/agents", "projects"]) {
     const subDir = path.join(dir, sub);
     ensureDir(subDir);
     // Git doesn't track empty directories — add .gitkeep

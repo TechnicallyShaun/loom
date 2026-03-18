@@ -20,11 +20,11 @@ loom init
 loom register myproject /path/to/project
 
 # 3. Add a global instruction (applies to all projects)
-echo "# Conventions\n\nUse conventional commits." > .loom/global/instructions/conventions.md
+echo "# Conventions\n\nUse conventional commits." > ~/.loom/global/instructions/conventions.md
 
 # 4. Add a global skill (on-demand workflow)
-mkdir -p .loom/global/skills/analyse
-echo "# Analyse\n\nRead the ticket and create an implementation plan." > .loom/global/skills/analyse/SKILL.md
+mkdir -p ~/.loom/global/skills/analyse
+echo "# Analyse\n\nRead the ticket and create an implementation plan." > ~/.loom/global/skills/analyse/SKILL.md
 
 # 5. Compile and deploy
 loom compile
@@ -41,17 +41,17 @@ Author → Compile → Deploy → Work → Harvest
    └────────────────────────────────────┘
 ```
 
-1. **Author** content in `.loom/` — instructions, skills, and agents
+1. **Author** content in `~/.loom/` — instructions, skills, and agents
 2. **Compile** merges global + project layers into target-specific output
 3. **Deploy** copies compiled files to your project directories
 4. **Harvest** detects changes made during development and merges them back
 
-Every step creates a git commit in the `.loom/` repo, so you can always roll back.
+Every step creates a git commit in the `~/.loom/` repo, so you can always roll back.
 
 ## Source Structure
 
 ```
-.loom/
+~/.loom/
 ├── config.yaml              # Registered projects (gitignored)
 ├── global/
 │   ├── instructions/        # Always-loaded context
@@ -76,7 +76,7 @@ Every step creates a git commit in the `.loom/` repo, so you can always roll bac
 
 | Command | Description |
 |---------|-------------|
-| `loom init` | Create `.loom/` workspace with git tracking |
+| `loom init` | Create `~/.loom/` workspace with git tracking |
 | `loom register <name> <path>` | Register a project for compilation |
 | `loom compile [project]` | Compile source to target-specific output |
 | `loom deploy [project]` | Copy compiled output to project paths |

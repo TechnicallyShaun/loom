@@ -1,5 +1,4 @@
 import { describe, it, expect, afterEach } from "vitest";
-import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import {
@@ -12,15 +11,9 @@ import {
   timestamp,
 } from "../src/utils/paths.js";
 
-const originalCwd = process.cwd();
 const originalEnv = process.env.LOOM_DIR;
 
-function mkTmp(prefix: string): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-}
-
 afterEach(() => {
-  process.chdir(originalCwd);
   if (originalEnv === undefined) {
     delete process.env.LOOM_DIR;
   } else {
@@ -29,9 +22,8 @@ afterEach(() => {
 });
 
 describe("defaultLoomDir", () => {
-  it("returns cwd/.loom", () => {
-    const tmp = mkTmp("loom-paths-default-");
-    expect(defaultLoomDir(tmp)).toBe(path.join(tmp, ".loom"));
+  it("returns ~/.loom", () => {
+    expect(defaultLoomDir()).toBe(path.join(os.homedir(), ".loom"));
   });
 });
 
@@ -41,35 +33,9 @@ describe("loomDir", () => {
     expect(loomDir()).toBe("/tmp/custom-loom");
   });
 
-  it("uses nearest existing .loom directory", () => {
+  it("falls back to ~/.loom when LOOM_DIR not set", () => {
     delete process.env.LOOM_DIR;
-    const tmp = mkTmp("loom-paths-nearest-");
-    const loom = path.join(tmp, ".loom");
-
-    fs.mkdirSync(path.join(loom, "global"), { recursive: true });
-    fs.mkdirSync(path.join(loom, "projects"), { recursive: true });
-    fs.writeFileSync(path.join(loom, "config.yaml"), "projects: {}\n", "utf-8");
-
-    const child = path.join(tmp, "a", "b");
-    fs.mkdirSync(child, { recursive: true });
-    process.chdir(child);
-
-    expect(loomDir()).toBe(loom);
-  });
-
-  it("falls back to cwd/.loom when no local loom dir exists", () => {
-    delete process.env.LOOM_DIR;
-    // Use a directory at the root of the filesystem so that walking up
-    // cannot find a stray .loom in any ancestor (e.g. the user's home).
-    const root = path.parse(process.cwd()).root;
-    const tmp = fs.mkdtempSync(path.join(root, "loom-paths-fallback-"));
-    try {
-      process.chdir(tmp);
-      expect(loomDir()).toBe(path.join(tmp, ".loom"));
-    } finally {
-      process.chdir(originalCwd);
-      fs.rmSync(tmp, { recursive: true, force: true });
-    }
+    expect(loomDir()).toBe(path.join(os.homedir(), ".loom"));
   });
 });
 
@@ -83,9 +49,7 @@ describe("path helpers", () => {
   });
 
   it("compiledDir returns base/.compiled/name", () => {
-    expect(compiledDir("/foo", "bar")).toBe(
-      path.join("/foo", ".compiled", "bar"),
-    );
+    expect(compiledDir("/foo", "bar")).toBe(path.join("/foo", ".compiled", "bar"));
   });
 
   it("configPath returns base/config.yaml", () => {

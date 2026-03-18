@@ -15,7 +15,11 @@ export function setupLoomDir(): string {
   fs.mkdirSync(path.join(dir, "global", "skills"), { recursive: true });
   fs.mkdirSync(path.join(dir, "global", "agents"), { recursive: true });
   fs.mkdirSync(path.join(dir, "projects"), { recursive: true });
-  fs.writeFileSync(path.join(dir, "config.yaml"), "targets:\n  - claude\n  - copilot\n  - codex\n  - gemini\nprojects: {}\n", "utf-8");
+  fs.writeFileSync(
+    path.join(dir, "config.yaml"),
+    "targets:\n  - claude\n  - copilot\n  - codex\n  - gemini\nprojects: {}\n",
+    "utf-8",
+  );
   fs.writeFileSync(path.join(dir, ".gitignore"), "config.yaml\n.compiled/\n", "utf-8");
   execSync("git init", { cwd: dir, stdio: "pipe" });
   execSync("git add -A", { cwd: dir, stdio: "pipe" });
