@@ -32,13 +32,15 @@ describe("init command", () => {
     expect(fs.existsSync(path.join(tmpDir, "global", "agents"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, "projects"))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, "config.yaml"))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, ".gitignore"))).toBe(true);
   });
 
-  it("creates a .gitignore that includes config.yaml", async () => {
+  it("tracks config.yaml in git (no .gitignore excluding it)", async () => {
     await init([]);
-    const gitignore = fs.readFileSync(path.join(tmpDir, ".gitignore"), "utf-8");
-    expect(gitignore).toContain("config.yaml");
+    const gitignorePath = path.join(tmpDir, ".gitignore");
+    if (fs.existsSync(gitignorePath)) {
+      const gitignore = fs.readFileSync(gitignorePath, "utf-8");
+      expect(gitignore).not.toContain("config.yaml");
+    }
   });
 
   it("is idempotent — does not reinitialise", async () => {

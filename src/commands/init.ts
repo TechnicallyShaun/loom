@@ -17,19 +17,14 @@ const SUBDIRS = ["global/instructions", "global/skills", "global/agents", "proje
 export function buildInitActions(dir: string): InitAction[] {
   const dirActions: InitAction[] = SUBDIRS.map((sub) => {
     const subDir = path.join(dir, sub);
-    const gitkeep = path.join(subDir, ".gitkeep");
     return {
       name: `create ${sub}/`,
-      needed: () => !fs.existsSync(gitkeep),
-      run: () => {
-        ensureDir(subDir);
-        fs.writeFileSync(gitkeep, "", "utf-8");
-      },
+      needed: () => !fs.existsSync(subDir),
+      run: () => ensureDir(subDir),
     };
   });
 
   const configPath = path.join(dir, "config.yaml");
-  const gitignorePath = path.join(dir, ".gitignore");
 
   return [
     ...dirActions,
@@ -43,13 +38,6 @@ export function buildInitActions(dir: string): InitAction[] {
           projects: {},
         };
         fs.writeFileSync(configPath, stringify(config), "utf-8");
-      },
-    },
-    {
-      name: "create .gitignore",
-      needed: () => !fs.existsSync(gitignorePath),
-      run: () => {
-        fs.writeFileSync(gitignorePath, "config.yaml\n", "utf-8");
       },
     },
     {

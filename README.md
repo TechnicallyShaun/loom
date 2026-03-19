@@ -52,7 +52,7 @@ Every step creates a git commit in the `~/.loom/` repo, so you can always roll b
 
 ```
 ~/.loom/
-├── config.yaml              # Registered projects (gitignored)
+├── config.yaml              # Registered projects
 ├── global/
 │   ├── instructions/        # Always-loaded context
 │   ├── skills/              # On-demand workflows

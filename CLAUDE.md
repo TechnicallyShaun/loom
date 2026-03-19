@@ -47,7 +47,7 @@ Each compiler takes a `MergedProject` and returns `CompiledFile[]`. Targets: cla
 
 ### Config (`src/config/loader.ts`)
 
-YAML-based (`config.yaml`) with `targets` array and `projects` map. Config is gitignored (contains absolute paths). `validateTargets()` checks against `VALID_TARGETS`.
+YAML-based (`config.yaml`) with `targets` array and `projects` map. Config is tracked in the `.loom/` git repo. `validateTargets()` checks against `VALID_TARGETS`.
 
 ### Source types and merge rules
 

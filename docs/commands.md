@@ -17,7 +17,6 @@ Creates the folder structure, `config.yaml`, and a git repo inside `.loom/`:
 ```
 .loom/
 ├── config.yaml
-├── .gitignore
 ├── global/
 │   ├── instructions/
 │   ├── skills/
@@ -25,9 +24,9 @@ Creates the folder structure, `config.yaml`, and a git repo inside `.loom/`:
 └── projects/
 ```
 
-`config.yaml` is gitignored because it contains local paths. Everything else is tracked.
+Everything is tracked in the `.loom/` git repo, including `config.yaml`.
 
-**Environment variable:** Set `LOOM_DIR` to override the default `.loom/` location.
+**Environment variable:** Set `LOOM_DIR` to override the default `cwd/.loom` location.
 
 ---
 
