@@ -36,13 +36,13 @@ afterEach(() => {
 describe("deploy command", () => {
   it("copies compiled output to project path", async () => {
     // Create compiled output
-    writeFile(path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"), "# Instructions\n");
+    writeFile(path.join(loomDir, "dist", "anvil", "CLAUDE.md"), "# Instructions\n");
     writeFile(
-      path.join(loomDir, ".compiled", "anvil", ".claude", "skills", "analyse", "SKILL.md"),
+      path.join(loomDir, "dist", "anvil", ".claude", "skills", "analyse", "SKILL.md"),
       "# Analyse\n",
     );
     writeFile(
-      path.join(loomDir, ".compiled", "anvil", ".github", "copilot-instructions.md"),
+      path.join(loomDir, "dist", "anvil", ".github", "copilot-instructions.md"),
       "# Instructions\n",
     );
 
@@ -56,7 +56,7 @@ describe("deploy command", () => {
   });
 
   it("creates deploy log entry", async () => {
-    writeFile(path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"), "test");
+    writeFile(path.join(loomDir, "dist", "anvil", "CLAUDE.md"), "test");
 
     await deploy(["anvil"]);
 

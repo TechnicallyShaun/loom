@@ -72,7 +72,7 @@ describe("full pipeline: init → register → compile → deploy → diff → d
     // 5. Compile
     await compile(["anvil"]);
 
-    const compiledDir = path.join(loomHome, ".compiled", "anvil");
+    const compiledDir = path.join(loomHome, "dist", "anvil");
 
     // Claude outputs
     const claudeMd = fs.readFileSync(path.join(compiledDir, "CLAUDE.md"), "utf-8");
@@ -151,7 +151,7 @@ describe("full pipeline: init → register → compile → deploy → diff → d
     await compile(["spark"]);
 
     const skill = fs.readFileSync(
-      path.join(loomHome, ".compiled", "spark", ".claude", "skills", "setup-env", "SKILL.md"),
+      path.join(loomHome, "dist", "spark", ".claude", "skills", "setup-env", "SKILL.md"),
       "utf-8",
     );
     expect(skill).toContain("Spark setup-env");

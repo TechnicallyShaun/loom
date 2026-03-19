@@ -83,7 +83,7 @@ describe("missing folders", () => {
 
     await compile(["minimal"]);
 
-    const claudeMd = path.join(loomDir, ".compiled", "minimal", "CLAUDE.md");
+    const claudeMd = path.join(loomDir, "dist", "minimal", "CLAUDE.md");
     expect(fs.existsSync(claudeMd)).toBe(true);
     expect(fs.readFileSync(claudeMd, "utf-8")).toContain("Rules");
     cleanup(projectPath);
@@ -98,7 +98,7 @@ describe("missing folders", () => {
       },
     });
 
-    // Deploy without compiling first — .compiled/nocompile doesn't exist
+    // Deploy without compiling first — dist/nocompile doesn't exist
     await expect(deploy(["nocompile"])).resolves.toBeUndefined();
     cleanup(projectPath);
   });

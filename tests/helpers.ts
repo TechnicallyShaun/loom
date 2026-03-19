@@ -20,7 +20,7 @@ export function setupLoomDir(): string {
     "targets:\n  - claude\n  - copilot\n  - codex\n  - gemini\nprojects: {}\n",
     "utf-8",
   );
-  fs.writeFileSync(path.join(dir, ".gitignore"), "config.yaml\n.compiled/\n", "utf-8");
+  fs.writeFileSync(path.join(dir, ".gitignore"), "dist/\n", "utf-8");
   execSync("git init", { cwd: dir, stdio: "pipe" });
   execSync("git add -A", { cwd: dir, stdio: "pipe" });
   execSync('git commit -m "init"', { cwd: dir, stdio: "pipe" });

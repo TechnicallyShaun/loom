@@ -1,30 +1,34 @@
 import fs from "node:fs";
 import path from "node:path";
-import { loomDir, compiledDir, timestamp } from "../utils/paths.js";
+import { loomDir, compiledDir, compiledGlobalDir, userLevelDir, timestamp } from "../utils/paths.js";
 import { loadConfig } from "../config/loader.js";
 import { gitCommit, getShortHash, gitTag } from "../utils/git.js";
 import { ensureDir, walkDir } from "../utils/sources.js";
+import { USER_LEVEL_TARGETS } from "../types/index.js";
 
 export async function deploy(args: string[]): Promise<void> {
   const dir = loomDir();
   const config = loadConfig(dir);
   const projectNames = Object.keys(config.projects);
 
-  if (projectNames.length === 0) {
-    console.log("No projects registered.");
-    return;
-  }
-
   const filter = args[0];
-  const toDeploy = filter ? projectNames.filter((n) => n === filter) : projectNames;
+  const deployGlobal = !filter || filter === "_global";
+  const deployProjects = filter !== "_global";
 
-  if (filter && toDeploy.length === 0) {
+  const toDeploy = deployProjects
+    ? filter
+      ? projectNames.filter((n) => n === filter)
+      : projectNames
+    : [];
+
+  if (filter && filter !== "_global" && toDeploy.length === 0) {
     console.log(`Unknown project: ${filter}`);
     return;
   }
 
   const deployed: string[] = [];
 
+  // --- Per-project deployment ---
   for (const name of toDeploy) {
     const entry = config.projects[name];
     const outDir = compiledDir(dir, name);
@@ -51,6 +55,33 @@ export async function deploy(args: string[]): Promise<void> {
     console.log(`Deployed ${name}: ${files.length} files → ${entry.path}`);
   }
 
+  // --- Global (user-level) deployment ---
+  if (deployGlobal) {
+    const globalOutDir = compiledGlobalDir(dir);
+    const globalTargets = config.targets.filter((t) =>
+      (USER_LEVEL_TARGETS as string[]).includes(t),
+    );
+
+    for (const target of globalTargets) {
+      const targetOutDir = path.join(globalOutDir, target);
+      if (!fs.existsSync(targetOutDir)) continue;
+
+      const destDir = userLevelDir(target);
+      const files = walkDir(targetOutDir);
+      if (files.length === 0) continue;
+
+      for (const relPath of files) {
+        const src = path.join(targetOutDir, relPath);
+        const dest = path.join(destDir, relPath);
+        ensureDir(path.dirname(dest));
+        fs.copyFileSync(src, dest);
+      }
+
+      deployed.push(`_global/${target}`);
+      console.log(`Deployed _global/${target}: ${files.length} files → ${destDir}`);
+    }
+  }
+
   if (deployed.length > 0) {
     let hash: string;
     try {
@@ -59,7 +90,6 @@ export async function deploy(args: string[]): Promise<void> {
       hash = "unknown";
     }
     const ts = timestamp();
-    // Write a deploy log entry so git always has something to commit
     const logPath = path.join(dir, ".deploy-log");
     const logEntry = `${ts} | ${deployed.join(", ")} @${hash}\n`;
     fs.appendFileSync(logPath, logEntry, "utf-8");
@@ -67,7 +97,6 @@ export async function deploy(args: string[]): Promise<void> {
     const commitMsg = `deploy: ${deployed.join(", ")} @${hash} (${ts})`;
     gitCommit(dir, commitMsg);
 
-    // Tag the deploy for easy rollback: deploy/<project>/<timestamp>
     const tagTs = ts.replace(/[: ]/g, "-");
     for (const name of deployed) {
       try {

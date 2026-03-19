@@ -1,6 +1,7 @@
 export type TargetType = "claude" | "copilot" | "codex" | "gemini";
 
 export const VALID_TARGETS: TargetType[] = ["claude", "copilot", "codex", "gemini"];
+export const USER_LEVEL_TARGETS: TargetType[] = ["claude", "copilot"];
 
 export interface ProjectEntry {
   path: string;

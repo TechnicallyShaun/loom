@@ -184,7 +184,7 @@ describe("harvest worktree scenarios", () => {
     const worktreePath = path.join(worktreesDir, "GOS-123456");
 
     // Compiled output (the source of truth for diffing)
-    const compiledDir = path.join(loomDir, ".compiled", "anvil");
+    const compiledDir = path.join(loomDir, "dist", "anvil");
     writeFile(path.join(compiledDir, "CLAUDE.md"), "# Instructions\n\nOriginal from loom.");
 
     // Main checkout (unchanged — it's a stale deploy target)
@@ -218,7 +218,7 @@ describe("harvest worktree scenarios", () => {
     const wt1 = path.join(worktreesDir, "GOS-111");
     const wt2 = path.join(worktreesDir, "GOS-222");
 
-    const compiledDir = path.join(loomDir, ".compiled", "anvil");
+    const compiledDir = path.join(loomDir, "dist", "anvil");
     writeFile(path.join(compiledDir, "CLAUDE.md"), "original");
 
     writeFile(path.join(wt1, "CLAUDE.md"), "original\nlearning from ticket 111");

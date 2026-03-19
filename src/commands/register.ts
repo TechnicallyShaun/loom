@@ -12,6 +12,11 @@ export async function register(args: string[]): Promise<void> {
     return;
   }
 
+  if (name === "_global") {
+    console.log(`"_global" is reserved for user-level compilation.`);
+    return;
+  }
+
   const dir = loomDir();
   if (!fs.existsSync(path.join(dir, ".git"))) {
     console.log("Loom not initialised. Run `loom init` first.");

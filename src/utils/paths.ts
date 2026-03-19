@@ -1,4 +1,6 @@
 import path from "node:path";
+import os from "node:os";
+import type { TargetType } from "../types/index.js";
 
 /** Default loom directory (local to current working directory) */
 export function defaultLoomDir(cwd = process.cwd()): string {
@@ -22,7 +24,24 @@ export function projectDir(base: string, name: string): string {
 
 /** Compiled output directory for a project */
 export function compiledDir(base: string, name: string): string {
-  return path.join(base, ".compiled", name);
+  return path.join(base, "dist", name);
+}
+
+/** Compiled output directory for global (user-level) content */
+export function compiledGlobalDir(base: string): string {
+  return path.join(base, "dist", "_global");
+}
+
+/** User-level deploy directory for a target */
+export function userLevelDir(target: TargetType, home = os.homedir()): string {
+  switch (target) {
+    case "claude":
+      return path.join(home, ".claude");
+    case "copilot":
+      return path.join(home, ".copilot");
+    default:
+      return "";
+  }
 }
 
 /** Config file path */

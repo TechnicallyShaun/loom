@@ -48,7 +48,7 @@ describe("compile command", () => {
 
     await compile(["anvil"]);
 
-    const claudeMd = path.join(loomDir, ".compiled", "anvil", "CLAUDE.md");
+    const claudeMd = path.join(loomDir, "dist", "anvil", "CLAUDE.md");
     expect(fs.existsSync(claudeMd)).toBe(true);
     expect(fs.readFileSync(claudeMd, "utf-8")).toContain("Conventions");
   });
@@ -66,7 +66,7 @@ describe("compile command", () => {
     await compile(["anvil"]);
 
     const claudeMd = fs.readFileSync(
-      path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"),
+      path.join(loomDir, "dist", "anvil", "CLAUDE.md"),
       "utf-8",
     );
     expect(claudeMd).toContain("Global Conventions");
@@ -83,12 +83,12 @@ describe("compile command", () => {
 
     expect(
       fs.existsSync(
-        path.join(loomDir, ".compiled", "anvil", ".claude", "skills", "analyse", "SKILL.md"),
+        path.join(loomDir, "dist", "anvil", ".claude", "skills", "analyse", "SKILL.md"),
       ),
     ).toBe(true);
     expect(
       fs.existsSync(
-        path.join(loomDir, ".compiled", "anvil", ".github", "skills", "analyse", "SKILL.md"),
+        path.join(loomDir, "dist", "anvil", ".github", "skills", "analyse", "SKILL.md"),
       ),
     ).toBe(true);
   });
@@ -103,7 +103,7 @@ describe("compile command", () => {
     await compile(["anvil"]);
 
     const skill = fs.readFileSync(
-      path.join(loomDir, ".compiled", "anvil", ".claude", "skills", "setup-env", "SKILL.md"),
+      path.join(loomDir, "dist", "anvil", ".claude", "skills", "setup-env", "SKILL.md"),
       "utf-8",
     );
     expect(skill).toContain("Anvil setup-env");
@@ -116,7 +116,7 @@ describe("compile command", () => {
     await compile(["anvil"]);
 
     const agent = fs.readFileSync(
-      path.join(loomDir, ".compiled", "anvil", ".claude", "agents", "work.md"),
+      path.join(loomDir, "dist", "anvil", ".claude", "agents", "work.md"),
       "utf-8",
     );
     expect(agent).toContain("Work Agent");
@@ -141,8 +141,8 @@ describe("compile command", () => {
 
     await compile([]);
 
-    expect(fs.existsSync(path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"))).toBe(true);
-    expect(fs.existsSync(path.join(loomDir, ".compiled", "spark", "CLAUDE.md"))).toBe(true);
+    expect(fs.existsSync(path.join(loomDir, "dist", "anvil", "CLAUDE.md"))).toBe(true);
+    expect(fs.existsSync(path.join(loomDir, "dist", "spark", "CLAUDE.md"))).toBe(true);
 
     cleanup(project2);
   });

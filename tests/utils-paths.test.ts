@@ -52,8 +52,8 @@ describe("path helpers", () => {
     expect(projectDir("/foo", "bar")).toBe(path.join("/foo", "projects", "bar"));
   });
 
-  it("compiledDir returns base/.compiled/name", () => {
-    expect(compiledDir("/foo", "bar")).toBe(path.join("/foo", ".compiled", "bar"));
+  it("compiledDir returns base/dist/name", () => {
+    expect(compiledDir("/foo", "bar")).toBe(path.join("/foo", "dist", "bar"));
   });
 
   it("configPath returns base/config.yaml", () => {

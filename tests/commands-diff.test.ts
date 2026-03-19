@@ -39,7 +39,7 @@ afterEach(() => {
 
 describe("diff command", () => {
   it("shows new files that would be deployed", async () => {
-    writeFile(path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"), "instructions");
+    writeFile(path.join(loomDir, "dist", "anvil", "CLAUDE.md"), "instructions");
 
     await diff(["anvil"]);
 
@@ -49,7 +49,7 @@ describe("diff command", () => {
   });
 
   it("shows modified files", async () => {
-    writeFile(path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"), "new version");
+    writeFile(path.join(loomDir, "dist", "anvil", "CLAUDE.md"), "new version");
     writeFile(path.join(projectPath, "CLAUDE.md"), "old version");
 
     await diff(["anvil"]);
@@ -60,7 +60,7 @@ describe("diff command", () => {
   });
 
   it("shows up to date when nothing changed", async () => {
-    writeFile(path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"), "same");
+    writeFile(path.join(loomDir, "dist", "anvil", "CLAUDE.md"), "same");
     writeFile(path.join(projectPath, "CLAUDE.md"), "same");
 
     await diff(["anvil"]);

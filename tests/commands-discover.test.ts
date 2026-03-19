@@ -61,7 +61,7 @@ describe("discover command", () => {
         anvil: { path: projectPath },
       },
     });
-    writeFile(path.join(loomDir, ".compiled", "anvil", "CLAUDE.md"), "test");
+    writeFile(path.join(loomDir, "dist", "anvil", "CLAUDE.md"), "test");
 
     await discover([]);
 

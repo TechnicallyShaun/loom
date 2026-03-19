@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { loomDir, globalDir, projectDir, compiledDir, timestamp } from "../utils/paths.js";
+import { loomDir, globalDir, projectDir, compiledDir, compiledGlobalDir, timestamp } from "../utils/paths.js";
 import { loadConfig, validateTargets } from "../config/loader.js";
 import {
   readMarkdownDir,
@@ -11,8 +11,9 @@ import {
   ensureDir,
 } from "../utils/sources.js";
 import { gitCommit } from "../utils/git.js";
-import { compileForTarget } from "../compilers/index.js";
+import { compileForTarget, compileForTargetUserLevel } from "../compilers/index.js";
 import type { MergedProject, CompiledFile } from "../types/index.js";
+import { USER_LEVEL_TARGETS } from "../types/index.js";
 
 export async function compile(args: string[]): Promise<void> {
   const dir = loomDir();
@@ -20,16 +21,17 @@ export async function compile(args: string[]): Promise<void> {
   validateTargets(config);
   const projectNames = Object.keys(config.projects);
 
-  if (projectNames.length === 0) {
-    console.log("No projects registered. Run `loom register <name> <path>` first.");
-    return;
-  }
-
-  // If a specific project is given, only compile that one
   const filter = args[0];
-  const toCompile = filter ? projectNames.filter((n) => n === filter) : projectNames;
+  const compileGlobal = !filter || filter === "_global";
+  const compileProjects = filter !== "_global";
 
-  if (filter && toCompile.length === 0) {
+  const toCompile = compileProjects
+    ? filter
+      ? projectNames.filter((n) => n === filter)
+      : projectNames
+    : [];
+
+  if (filter && filter !== "_global" && toCompile.length === 0) {
     console.log(`Unknown project: ${filter}`);
     return;
   }
@@ -41,6 +43,7 @@ export async function compile(args: string[]): Promise<void> {
 
   const compiled: string[] = [];
 
+  // --- Per-project compilation ---
   for (const name of toCompile) {
     const entry = config.projects[name];
     const pDir = projectDir(dir, name);
@@ -58,15 +61,12 @@ export async function compile(args: string[]): Promise<void> {
       agents: mergeLayers(globalAgents, projAgents),
     };
 
-    // Compile for each target
     const files: CompiledFile[] = [];
     for (const target of config.targets) {
       files.push(...compileForTarget(target, merged));
     }
 
-    // Write compiled output
     const outDir = compiledDir(dir, name);
-    // Clean previous output
     if (fs.existsSync(outDir)) {
       fs.rmSync(outDir, { recursive: true });
     }
@@ -80,5 +80,42 @@ export async function compile(args: string[]): Promise<void> {
     console.log(`Compiled ${name}: ${files.length} files for [${config.targets.join(", ")}]`);
   }
 
-  gitCommit(dir, `compile: ${compiled.join(", ")} (${timestamp()})`);
+  // --- Global (user-level) compilation ---
+  const globalTargets = config.targets.filter((t) =>
+    (USER_LEVEL_TARGETS as string[]).includes(t),
+  );
+
+  if (compileGlobal && globalTargets.length > 0) {
+    const globalMerged: MergedProject = {
+      name: "_global",
+      targets: globalTargets,
+      projectPath: "",
+      instructions: concatInstructions(globalInstructions, []),
+      skills: globalSkills,
+      agents: globalAgents,
+    };
+
+    const globalOutDir = compiledGlobalDir(dir);
+    if (fs.existsSync(globalOutDir)) {
+      fs.rmSync(globalOutDir, { recursive: true });
+    }
+
+    let totalFiles = 0;
+    for (const target of globalTargets) {
+      const targetFiles = compileForTargetUserLevel(target, globalMerged);
+      for (const file of targetFiles) {
+        const filePath = path.join(globalOutDir, target, file.relativePath);
+        ensureDir(path.dirname(filePath));
+        fs.writeFileSync(filePath, file.content, "utf-8");
+      }
+      totalFiles += targetFiles.length;
+    }
+
+    compiled.push("_global");
+    console.log(`Compiled _global: ${totalFiles} files for [${globalTargets.join(", ")}]`);
+  }
+
+  if (compiled.length > 0) {
+    gitCommit(dir, `compile: ${compiled.join(", ")} (${timestamp()})`);
+  }
 }
