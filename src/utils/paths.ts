@@ -1,14 +1,13 @@
 import path from "node:path";
-import os from "node:os";
 
-/** Default loom home directory */
-export function defaultLoomDir(): string {
-  return path.join(os.homedir(), ".loom");
+/** Default loom directory (local to current working directory) */
+export function defaultLoomDir(cwd = process.cwd()): string {
+  return path.join(cwd, ".loom");
 }
 
-/** Resolve loom dir — uses LOOM_DIR env var or defaults to ~/.loom */
-export function loomDir(): string {
-  return process.env.LOOM_DIR || defaultLoomDir();
+/** Resolve loom dir — LOOM_DIR env var or ./.loom */
+export function loomDir(cwd = process.cwd()): string {
+  return process.env.LOOM_DIR || defaultLoomDir(cwd);
 }
 
 /** Global source directories */

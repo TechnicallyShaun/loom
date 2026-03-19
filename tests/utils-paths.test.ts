@@ -22,8 +22,12 @@ afterEach(() => {
 });
 
 describe("defaultLoomDir", () => {
-  it("returns ~/.loom", () => {
-    expect(defaultLoomDir()).toBe(path.join(os.homedir(), ".loom"));
+  it("returns cwd/.loom by default", () => {
+    expect(defaultLoomDir()).toBe(path.join(process.cwd(), ".loom"));
+  });
+
+  it("returns custom cwd/.loom when cwd provided", () => {
+    expect(defaultLoomDir("/tmp/myproject")).toBe(path.join("/tmp/myproject", ".loom"));
   });
 });
 
@@ -33,9 +37,9 @@ describe("loomDir", () => {
     expect(loomDir()).toBe("/tmp/custom-loom");
   });
 
-  it("falls back to ~/.loom when LOOM_DIR not set", () => {
+  it("falls back to cwd/.loom when LOOM_DIR not set", () => {
     delete process.env.LOOM_DIR;
-    expect(loomDir()).toBe(path.join(os.homedir(), ".loom"));
+    expect(loomDir()).toBe(path.join(process.cwd(), ".loom"));
   });
 });
 
