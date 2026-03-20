@@ -1,6 +1,6 @@
 # Command Reference
 
-All commands that accept `[project]` run against all registered projects when no project name is given.
+All commands that accept `[project]` run against all registered projects when no project name is given. Pass `_global` to target only user-level compilation.
 
 ---
 
@@ -24,6 +24,8 @@ Creates the folder structure, `config.yaml`, and a git repo inside `.loom/`:
 └── projects/
 ```
 
+Each step is individually idempotent — running `loom init` again only creates what's missing.
+
 Everything is tracked in the `.loom/` git repo, including `config.yaml`.
 
 **Environment variable:** Set `LOOM_DIR` to override the default `cwd/.loom` location.
@@ -40,13 +42,13 @@ loom register myproject /path/to/project
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `name` | Yes | Short name for the project (e.g. `anvil`, `api`) |
+| `name` | Yes | Short name for the project (e.g. `anvil`, `api`). `_global` is reserved. |
 | `path` | Yes | Path to the project directory (must exist) |
 
 What it does:
 
 1. Adds the project to `config.yaml`
-2. Creates `projects/<name>/instructions/`, `projects/<name>/skills/`, `projects/<name>/agents/` with `.gitkeep` files
+2. Creates `projects/<name>/instructions/`, `projects/<name>/skills/`, `projects/<name>/agents/`
 3. Commits: `register: <name>`
 
 ```bash
@@ -62,13 +64,14 @@ loom register api ~/code/api-service
 Merge global and project source layers, then compile to target-specific output.
 
 ```bash
-loom compile            # Compile all projects
-loom compile myproject  # Compile one project
+loom compile            # Compile all projects + _global
+loom compile myproject  # Compile one project only
+loom compile _global    # Compile only user-level output
 ```
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `project` | No | Compile only this project |
+| `project` | No | Compile only this project (or `_global` for user-level only) |
 
 The compile step:
 
@@ -76,10 +79,10 @@ The compile step:
 2. Reads project source from `projects/<name>/{instructions,skills,agents}/`
 3. Merges the two layers (see [Content Guide](content-guide.md) for merge rules)
 4. Generates target-specific files for each enabled target
-5. Writes output to `.compiled/<project>/`
+5. Writes output to `dist/<project>/`
 6. Commits: `compile: <project> (<timestamp>)`
 
-**Output per target:**
+**Per-project output:**
 
 | Target | Instructions | Skills | Agents |
 |--------|-------------|--------|--------|
@@ -88,6 +91,15 @@ The compile step:
 | Codex | `AGENTS.md` | — | — |
 | Gemini | `GEMINI.md` | — | — |
 
+**Global (user-level) output** — compiled to `dist/_global/<target>/` with paths remapped for user-level directories:
+
+| Target | Instructions | Skills | Agents |
+|--------|-------------|--------|--------|
+| Claude | `CLAUDE.md` | `skills/<name>/SKILL.md` | `agents/<name>.md` |
+| Copilot | `copilot-instructions.md` | `skills/<name>/SKILL.md` | `agents/<name>.agent.md` |
+
+Global compilation uses only global content (no project merge). Only Claude and Copilot have user-level equivalents.
+
 ---
 
 ## `loom deploy [project]`
@@ -95,21 +107,24 @@ The compile step:
 Copy compiled output to the registered project paths.
 
 ```bash
-loom deploy            # Deploy all projects
-loom deploy myproject  # Deploy one project
+loom deploy            # Deploy all projects + _global
+loom deploy myproject  # Deploy one project only
+loom deploy _global    # Deploy only to user-level directories
 ```
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `project` | No | Deploy only this project |
+| `project` | No | Deploy only this project (or `_global` for user-level only) |
 
 What it does:
 
-1. Copies files from `.compiled/<project>/` to the registered project path
-2. Creates directories as needed
-3. Logs the deploy to `.deploy-log`
-4. Commits: `deploy: <project> @<hash> (<timestamp>)`
-5. Creates a git tag: `deploy/<project>/<timestamp>`
+1. Copies files from `dist/<project>/` to the registered project path
+2. Copies files from `dist/_global/claude/` to `~/.claude/`
+3. Copies files from `dist/_global/copilot/` to `~/.copilot/`
+4. Creates directories as needed
+5. Logs the deploy to `.deploy-log`
+6. Commits: `deploy: <project> @<hash> (<timestamp>)`
+7. Creates a git tag: `deploy/<project>/<timestamp>`
 
 After deploying, the project directory will contain the target-specific files:
 
@@ -125,6 +140,20 @@ After deploying, the project directory will contain the target-specific files:
     ├── copilot-instructions.md
     ├── skills/analyse/SKILL.md
     └── agents/work.agent.md
+```
+
+And user-level directories will contain:
+
+```
+~/.claude/
+├── CLAUDE.md
+├── skills/analyse/SKILL.md
+└── agents/work.md
+
+~/.copilot/
+├── copilot-instructions.md
+├── skills/analyse/SKILL.md
+└── agents/work.agent.md
 ```
 
 The project must be compiled first — deploy skips projects with no compiled output.
@@ -190,13 +219,14 @@ Accept changes? [y/n]
 Preview what `deploy` would change without writing anything.
 
 ```bash
-loom diff              # Diff all projects
+loom diff              # Diff all projects + _global
 loom diff myproject    # Diff one project
+loom diff _global      # Diff only user-level directories
 ```
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `project` | No | Diff only this project |
+| `project` | No | Diff only this project (or `_global` for user-level only) |
 
 Shows new files (`+`) and modified files (`~`):
 
@@ -205,6 +235,11 @@ myproject:
   + .claude/skills/setup-env/SKILL.md (new)
   ~ CLAUDE.md (modified)
   (2 file(s) would change)
+
+_global/claude:
+  + CLAUDE.md (new)
+  + skills/analyse/SKILL.md (new)
+  2 file(s) would change
 ```
 
 Run after `compile` and before `deploy` to review changes before they land.
@@ -222,7 +257,7 @@ loom discover
 Displays the Loom home directory, configured targets, and for each project: its path, whether it's been compiled, and the last compile/deploy commits.
 
 ```
-Loom home: /home/user/.loom
+Loom home: .loom
 
 2 project(s) registered:
 
@@ -243,7 +278,7 @@ Loom home: /home/user/.loom
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LOOM_DIR` | `./.loom` | Override the Loom workspace location |
+| `LOOM_DIR` | `cwd/.loom` | Override the Loom workspace location |
 
 ---
 

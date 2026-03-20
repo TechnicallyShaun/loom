@@ -1,32 +1,22 @@
-# Features
+# Future Features
 
-## `loom init`
-Create a `.loom/` directory in the current location with starter config and example skills. Optionally specify `--global` to initialise at `~/.loom/`.
+Features that are not yet implemented but are planned or under consideration.
 
-## `loom compile`
-Read all source skills from `.loom/skills/`, merge global and project-level configs, and produce target-specific output files in `dist/`. Each enabled target gets its own compiled output.
+## Watch mode
 
-## `loom deploy`
-Copy compiled output from `dist/` to registered target locations. Handles both global paths (e.g. `~/.claude/CLAUDE.md`) and per-project paths (e.g. `./CLAUDE.md`, `./.github/copilot-instructions.md`).
+Auto-compile on source file changes. Monitor `.loom/` for modifications and re-run `loom compile` automatically.
 
-## `loom add-project <path>`
-Register a project directory for deployment. Stores the path and its enabled targets in config. Loom will deploy project-level output to this location.
+```bash
+loom watch              # Watch all projects
+loom watch myproject    # Watch one project
+```
 
-## `loom discover`
-Scan for global and project-level `.loom/` directories. Display what was found: config, skills, registered projects, and enabled targets. Useful for debugging and orientation.
+Would use `fs.watch` or a lightweight watcher. Useful during active authoring sessions.
 
-## Compiler Targets
+## Harvest from user-level directories
 
-| Target | Native file | Global path | Repo path |
-|--------|------------|-------------|-----------|
-| Claude Code | `CLAUDE.md` | `~/CLAUDE.md` | `./CLAUDE.md` |
-| GitHub Copilot | `copilot-instructions.md` | `~/.github/copilot-instructions.md` | `./.github/copilot-instructions.md` |
-| Codex CLI | `AGENTS.md` | `~/AGENTS.md` | `./AGENTS.md` |
-| Gemini CLI | `GEMINI.md` | `~/GEMINI.md` | `./GEMINI.md` |
-| Cursor | `.cursorrules` | N/A | `./.cursorrules` |
+Currently harvest only scans per-project deployed locations. Extend to also scan user-level directories (`~/.claude/`, `~/.copilot/`) and merge changes back to `global/` source.
 
-## Future Considerations
+## Rules support
 
-- **Harvest:** Pull changes back from deployed files into source skills
-- **Diff:** Show what would change before deploying
-- **Watch:** Auto-compile on skill file changes
+Claude Code supports `.claude/rules/` — path-scoped instruction files that only load when the AI reads matching files. Loom could compile a new `rules` content type into this format. See `vision/rules.md` for design.
