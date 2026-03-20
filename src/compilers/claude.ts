@@ -1,12 +1,26 @@
 import type { MergedProject, CompiledFile } from "../types/index.js";
-import { serializeFrontmatter, mapToolNames } from "../utils/frontmatter.js";
+import {
+  serializeFrontmatter,
+  mapToolNames,
+  applySubstitutions,
+  claudeSubstitutions,
+  deriveArgumentHint,
+} from "../utils/frontmatter.js";
 import { CLAUDE_TOOL_MAP } from "./tool-mappings.js";
 
-function mapSkillFrontmatter(fm: Record<string, unknown>): Record<string, unknown> {
+function mapSkillFrontmatter(
+  fm: Record<string, unknown>,
+  content: string,
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (fm.name != null) out.name = fm.name;
   if (fm.description != null) out.description = fm.description;
-  if (fm["argument-hint"] != null) out["argument-hint"] = fm["argument-hint"];
+  if (fm["argument-hint"] != null) {
+    out["argument-hint"] = fm["argument-hint"];
+  } else {
+    const hint = deriveArgumentHint(content);
+    if (hint) out["argument-hint"] = hint;
+  }
   if (fm["user-invocable"] != null) out["user-invocable"] = fm["user-invocable"];
   if (fm["disable-model-invocation"] != null)
     out["disable-model-invocation"] = fm["disable-model-invocation"];
@@ -39,10 +53,12 @@ export function compileClaude(project: MergedProject): CompiledFile[] {
 
   // Skills → .claude/skills/<name>/SKILL.md + assets
   for (const skill of project.skills) {
-    const fm = mapSkillFrontmatter(skill.frontmatter ?? {});
+    const ctx = claudeSubstitutions(skill.name, project.projectPath, project.loomRoot);
+    const body = applySubstitutions(skill.content, ctx);
+    const fm = mapSkillFrontmatter(skill.frontmatter ?? {}, skill.content);
     files.push({
       relativePath: `.claude/skills/${skill.name}/SKILL.md`,
-      content: serializeFrontmatter(fm, skill.content) + "\n",
+      content: serializeFrontmatter(fm, body) + "\n",
     });
     for (const asset of skill.assets ?? []) {
       files.push({

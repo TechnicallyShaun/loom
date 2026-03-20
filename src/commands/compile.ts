@@ -36,6 +36,7 @@ export async function compile(args: string[]): Promise<void> {
     return;
   }
 
+  const loomRoot = path.dirname(dir);
   const gDir = globalDir(dir);
   const globalInstructions = readMarkdownDir(path.join(gDir, "instructions"));
   const globalSkills = readSkillsDir(path.join(gDir, "skills"));
@@ -56,6 +57,7 @@ export async function compile(args: string[]): Promise<void> {
       name,
       targets: config.targets,
       projectPath: entry.path,
+      loomRoot,
       instructions: concatInstructions(globalInstructions, projInstructions),
       skills: mergeLayers(globalSkills, projSkills),
       agents: mergeLayers(globalAgents, projAgents),
@@ -94,6 +96,7 @@ export async function compile(args: string[]): Promise<void> {
       name: "_global",
       targets: globalTargets,
       projectPath: "",
+      loomRoot,
       instructions: concatInstructions(globalInstructions, []),
       skills: globalSkills,
       agents: globalAgents,

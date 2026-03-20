@@ -11,6 +11,7 @@ function makeProject(overrides: Partial<MergedProject> = {}): MergedProject {
     name: "test",
     targets: ["claude"],
     projectPath: "/tmp/test",
+    loomRoot: "/tmp",
     instructions: "# Instructions\n\nDo the thing.",
     skills: [
       { name: "analyse", content: "# Analyse\n\nAnalyse everything." },
@@ -153,6 +154,35 @@ describe("compileClaude", () => {
     expect(sh).toBeDefined();
   });
 
+  it("substitutes {skill} to ${CLAUDE_SKILL_DIR}", () => {
+    const project = makeProject({
+      skills: [{ name: "cleanse", content: "Run `npx tsx {skill}/trac.ts`" }],
+    });
+    const files = compileClaude(project);
+    const skill = files.find((f) => f.relativePath === ".claude/skills/cleanse/SKILL.md");
+    expect(skill!.content).toContain("${CLAUDE_SKILL_DIR}/trac.ts");
+    expect(skill!.content).not.toContain("{skill}");
+  });
+
+  it("substitutes {args} to $ARGUMENTS and {arg:name} to positional", () => {
+    const project = makeProject({
+      skills: [{ name: "fetch", content: "Get {arg:ticket-id} in {arg:component}" }],
+    });
+    const files = compileClaude(project);
+    const skill = files.find((f) => f.relativePath === ".claude/skills/fetch/SKILL.md");
+    expect(skill!.content).toContain("$0");
+    expect(skill!.content).toContain("$1");
+  });
+
+  it("auto-derives argument-hint from {arg:*} usage", () => {
+    const project = makeProject({
+      skills: [{ name: "fetch", content: "Get {arg:ticket-id}" }],
+    });
+    const files = compileClaude(project);
+    const skill = files.find((f) => f.relativePath === ".claude/skills/fetch/SKILL.md");
+    expect(skill!.content).toContain("argument-hint: <ticket-id>");
+  });
+
   it("returns empty for no instructions", () => {
     const files = compileClaude(makeProject({ instructions: "" }));
     expect(files.find((f) => f.relativePath === "CLAUDE.md")).toBeUndefined();
@@ -249,6 +279,25 @@ describe("compileCopilot", () => {
     const ts = files.find((f) => f.relativePath === ".github/skills/cleanse/trac.ts");
     expect(ts).toBeDefined();
     expect(Buffer.isBuffer(ts!.content)).toBe(true);
+  });
+
+  it("substitutes {skill} to relative path", () => {
+    const project = makeProject({
+      skills: [{ name: "cleanse", content: "Run `npx tsx {skill}/trac.ts`" }],
+    });
+    const files = compileCopilot(project);
+    const skill = files.find((f) => f.relativePath === ".github/skills/cleanse/SKILL.md");
+    expect(skill!.content).toContain(".github/skills/cleanse/trac.ts");
+    expect(skill!.content).not.toContain("{skill}");
+  });
+
+  it("substitutes {arg:name} to Copilot input syntax", () => {
+    const project = makeProject({
+      skills: [{ name: "fetch", content: "Get {arg:ticket-id}" }],
+    });
+    const files = compileCopilot(project);
+    const skill = files.find((f) => f.relativePath === ".github/skills/fetch/SKILL.md");
+    expect(skill!.content).toContain("${input:ticketId:Enter ticket-id}");
   });
 });
 

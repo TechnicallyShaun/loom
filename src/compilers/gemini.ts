@@ -1,12 +1,27 @@
 import type { MergedProject, CompiledFile } from "../types/index.js";
-import { serializeFrontmatter, mapToolNames } from "../utils/frontmatter.js";
+import {
+  serializeFrontmatter,
+  mapToolNames,
+  applySubstitutions,
+  geminiSubstitutions,
+  deriveArgumentHint,
+} from "../utils/frontmatter.js";
 import { GEMINI_TOOL_MAP } from "./tool-mappings.js";
 
-function mapSkillFrontmatter(fm: Record<string, unknown>): Record<string, unknown> {
+function mapSkillFrontmatter(
+  fm: Record<string, unknown>,
+  content: string,
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (fm.name != null) out.name = fm.name;
   if (fm.description != null) out.description = fm.description;
-  // Gemini skills don't support argument-hint, user-invocable, disable-model-invocation, or tools
+  if (fm["argument-hint"] != null) {
+    out["argument-hint"] = fm["argument-hint"];
+  } else {
+    const hint = deriveArgumentHint(content);
+    if (hint) out["argument-hint"] = hint;
+  }
+  // Gemini skills don't support user-invocable, disable-model-invocation, or tools
   return out;
 }
 
@@ -34,10 +49,12 @@ export function compileGemini(project: MergedProject): CompiledFile[] {
 
   // Skills → .gemini/skills/<name>/SKILL.md + assets
   for (const skill of project.skills) {
-    const fm = mapSkillFrontmatter(skill.frontmatter ?? {});
+    const ctx = geminiSubstitutions(skill.name, project.projectPath, project.loomRoot);
+    const body = applySubstitutions(skill.content, ctx);
+    const fm = mapSkillFrontmatter(skill.frontmatter ?? {}, skill.content);
     files.push({
       relativePath: `.gemini/skills/${skill.name}/SKILL.md`,
-      content: serializeFrontmatter(fm, skill.content) + "\n",
+      content: serializeFrontmatter(fm, body) + "\n",
     });
     for (const asset of skill.assets ?? []) {
       files.push({

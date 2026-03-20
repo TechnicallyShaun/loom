@@ -1,5 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { parseFrontmatter, serializeFrontmatter, serializeToml, mapToolNames } from "../src/utils/frontmatter.js";
+import {
+  parseFrontmatter,
+  serializeFrontmatter,
+  serializeToml,
+  mapToolNames,
+  applySubstitutions,
+  claudeSubstitutions,
+  copilotSubstitutions,
+  codexSubstitutions,
+  deriveArgumentHint,
+} from "../src/utils/frontmatter.js";
 import { CLAUDE_TOOL_MAP, COPILOT_TOOL_MAP } from "../src/compilers/tool-mappings.js";
 
 describe("parseFrontmatter", () => {
@@ -115,5 +125,75 @@ describe("serializeToml", () => {
   it("skips null values", () => {
     const result = serializeToml({ name: "test", missing: null });
     expect(result).toBe('name = "test"');
+  });
+});
+
+describe("applySubstitutions", () => {
+  it("replaces {skill}, {project}, {loom} for Claude", () => {
+    const ctx = claudeSubstitutions("cleanse", "/app", "/workspace");
+    const result = applySubstitutions("Run {skill}/trac.ts in {project}/src from {loom}", ctx);
+    expect(result).toBe("Run ${CLAUDE_SKILL_DIR}/trac.ts in /app/src from /workspace");
+  });
+
+  it("replaces {skill} with relative path for Copilot", () => {
+    const ctx = copilotSubstitutions("cleanse", "/app", "/workspace");
+    const result = applySubstitutions("Run {skill}/trac.ts", ctx);
+    expect(result).toBe("Run .github/skills/cleanse/trac.ts");
+  });
+
+  it("replaces {args} for Claude", () => {
+    const ctx = claudeSubstitutions("fetch", "/app", "/workspace");
+    const result = applySubstitutions("Get {args}", ctx);
+    expect(result).toBe("Get $ARGUMENTS");
+  });
+
+  it("replaces {arg:name} positionally for Claude", () => {
+    const ctx = claudeSubstitutions("fetch", "/app", "/workspace");
+    const result = applySubstitutions("Get {arg:ticket} in {arg:area}", ctx);
+    expect(result).toBe("Get $0 in $1");
+  });
+
+  it("replaces {arg:name} with input syntax for Copilot", () => {
+    const ctx = copilotSubstitutions("fetch", "/app", "/workspace");
+    const result = applySubstitutions("Get {arg:ticket-id}", ctx);
+    expect(result).toBe("Get ${input:ticketId:Enter ticket-id}");
+  });
+
+  it("uses $1-based indexing for Codex", () => {
+    const ctx = codexSubstitutions("fetch", "/app", "/workspace");
+    const result = applySubstitutions("Get {arg:ticket} in {arg:area}", ctx);
+    expect(result).toBe("Get $1 in $2");
+  });
+
+  it("reuses same index for repeated {arg:name}", () => {
+    const ctx = claudeSubstitutions("fetch", "/app", "/workspace");
+    const result = applySubstitutions("{arg:ticket} then {arg:ticket} again", ctx);
+    expect(result).toBe("$0 then $0 again");
+  });
+
+  it("passes through unknown {placeholders}", () => {
+    const ctx = claudeSubstitutions("test", "/app", "/workspace");
+    const result = applySubstitutions("Keep {other} unchanged", ctx);
+    expect(result).toBe("Keep {other} unchanged");
+  });
+});
+
+describe("deriveArgumentHint", () => {
+  it("derives hint from {arg:*} usage", () => {
+    expect(deriveArgumentHint("Get {arg:ticket-id} in {arg:component}")).toBe(
+      "<ticket-id> <component>",
+    );
+  });
+
+  it("returns undefined for {args}", () => {
+    expect(deriveArgumentHint("Get {args}")).toBeUndefined();
+  });
+
+  it("returns undefined when no args", () => {
+    expect(deriveArgumentHint("No arguments here")).toBeUndefined();
+  });
+
+  it("deduplicates repeated arg names", () => {
+    expect(deriveArgumentHint("{arg:id} then {arg:id}")).toBe("<id>");
   });
 });

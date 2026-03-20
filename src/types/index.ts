@@ -30,6 +30,8 @@ export interface MergedProject {
   name: string;
   targets: TargetType[];
   projectPath: string;
+  /** Parent directory of .loom/ — the workspace root */
+  loomRoot: string;
   instructions: string;
   skills: SourceContent[];
   agents: SourceContent[];
