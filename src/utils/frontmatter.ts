@@ -18,10 +18,7 @@ export function parseFrontmatter(raw: string): ParsedFrontmatter {
 }
 
 /** Reassemble frontmatter and body into a markdown string */
-export function serializeFrontmatter(
-  frontmatter: Record<string, unknown>,
-  body: string,
-): string {
+export function serializeFrontmatter(frontmatter: Record<string, unknown>, body: string): string {
   const keys = Object.keys(frontmatter);
   if (keys.length === 0) return body;
   const yaml = stringify(frontmatter, { lineWidth: 0 }).trimEnd();
@@ -121,7 +118,11 @@ export function deriveArgumentHint(content: string): string | undefined {
 }
 
 /** Create substitution context for Claude Code */
-export function claudeSubstitutions(skillName: string, projectPath: string, loomRoot: string): SubstitutionContext {
+export function claudeSubstitutions(
+  skillName: string,
+  projectPath: string,
+  loomRoot: string,
+): SubstitutionContext {
   return {
     skill: "${CLAUDE_SKILL_DIR}",
     project: projectPath || ".",
@@ -132,7 +133,11 @@ export function claudeSubstitutions(skillName: string, projectPath: string, loom
 }
 
 /** Create substitution context for Copilot CLI */
-export function copilotSubstitutions(skillName: string, projectPath: string, loomRoot: string): SubstitutionContext {
+export function copilotSubstitutions(
+  skillName: string,
+  projectPath: string,
+  loomRoot: string,
+): SubstitutionContext {
   return {
     skill: `.github/skills/${skillName}`,
     project: ".",
@@ -143,7 +148,11 @@ export function copilotSubstitutions(skillName: string, projectPath: string, loo
 }
 
 /** Create substitution context for Gemini CLI */
-export function geminiSubstitutions(skillName: string, projectPath: string, loomRoot: string): SubstitutionContext {
+export function geminiSubstitutions(
+  skillName: string,
+  projectPath: string,
+  loomRoot: string,
+): SubstitutionContext {
   return {
     skill: `.gemini/skills/${skillName}`,
     project: ".",
@@ -154,7 +163,11 @@ export function geminiSubstitutions(skillName: string, projectPath: string, loom
 }
 
 /** Create substitution context for Codex CLI */
-export function codexSubstitutions(skillName: string, projectPath: string, loomRoot: string): SubstitutionContext {
+export function codexSubstitutions(
+  skillName: string,
+  projectPath: string,
+  loomRoot: string,
+): SubstitutionContext {
   return {
     skill: `.codex/skills/${skillName}`,
     project: ".",
@@ -178,19 +191,13 @@ export function extractSkillRefs(content: string): string[] {
 }
 
 /** Validate skill references against known skill names, return unknown refs */
-export function validateSkillRefs(
-  content: string,
-  knownSkills: string[],
-): string[] {
+export function validateSkillRefs(content: string, knownSkills: string[]): string[] {
   const refs = extractSkillRefs(content);
   return refs.filter((r) => !knownSkills.includes(r));
 }
 
 /** Expand loom-neutral tool names through a target mapping */
-export function mapToolNames(
-  tools: string[],
-  mapping: Record<string, string[]>,
-): string[] {
+export function mapToolNames(tools: string[], mapping: Record<string, string[]>): string[] {
   const result: string[] = [];
   for (const tool of tools) {
     const mapped = mapping[tool];

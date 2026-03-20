@@ -1,6 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
-import { loomDir, compiledDir, compiledGlobalDir, userLevelDir, timestamp } from "../utils/paths.js";
+import {
+  loomDir,
+  compiledDir,
+  compiledGlobalDir,
+  userLevelDir,
+  timestamp,
+} from "../utils/paths.js";
 import { loadConfig } from "../config/loader.js";
 import { gitCommit, getShortHash, gitTag } from "../utils/git.js";
 import { ensureDir, walkDir } from "../utils/sources.js";

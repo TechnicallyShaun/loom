@@ -1,6 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import { loomDir, globalDir, projectDir, compiledDir, compiledGlobalDir, timestamp } from "../utils/paths.js";
+import {
+  loomDir,
+  globalDir,
+  projectDir,
+  compiledDir,
+  compiledGlobalDir,
+  timestamp,
+} from "../utils/paths.js";
 import { loadConfig, validateTargets } from "../config/loader.js";
 import {
   readMarkdownDir,
@@ -103,9 +110,7 @@ export async function compile(args: string[]): Promise<void> {
   }
 
   // --- Global (user-level) compilation ---
-  const globalTargets = config.targets.filter((t) =>
-    (USER_LEVEL_TARGETS as string[]).includes(t),
-  );
+  const globalTargets = config.targets.filter((t) => (USER_LEVEL_TARGETS as string[]).includes(t));
 
   if (compileGlobal && globalTargets.length > 0) {
     const globalMerged: MergedProject = {
