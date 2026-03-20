@@ -8,17 +8,26 @@ jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+      - name: Configure git for tests
+        run: |
+          git config --global user.email "ci@loom-cli.dev"
+          git config --global user.name "Loom CI"
       - run: npm ci
       - run: npm run lint
+      - run: npm run format:check
       - run: npm run build
       - run: npm test
+      - name: Create GitHub Release
+        run: gh release create "${{ github.ref_name }}" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Placeholder: uncomment when ready to publish
       # - run: npm publish
       #   env:
