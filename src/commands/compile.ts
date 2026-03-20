@@ -11,6 +11,7 @@ import {
   ensureDir,
 } from "../utils/sources.js";
 import { gitCommit } from "../utils/git.js";
+import { validateSkillRefs } from "../utils/frontmatter.js";
 import { compileForTarget, compileForTargetUserLevel } from "../compilers/index.js";
 import type { MergedProject, CompiledFile } from "../types/index.js";
 import { USER_LEVEL_TARGETS } from "../types/index.js";
@@ -62,6 +63,21 @@ export async function compile(args: string[]): Promise<void> {
       skills: mergeLayers(globalSkills, projSkills),
       agents: mergeLayers(globalAgents, projAgents),
     };
+
+    // Validate /skill-name references
+    const knownSkills = merged.skills.map((s) => s.name);
+    for (const skill of merged.skills) {
+      const unknown = validateSkillRefs(skill.content, knownSkills);
+      for (const ref of unknown) {
+        console.log(`  warn: ${name}/skills/${skill.name} references unknown skill /${ref}`);
+      }
+    }
+    for (const agent of merged.agents) {
+      const unknown = validateSkillRefs(agent.content, knownSkills);
+      for (const ref of unknown) {
+        console.log(`  warn: ${name}/agents/${agent.name} references unknown skill /${ref}`);
+      }
+    }
 
     const files: CompiledFile[] = [];
     for (const target of config.targets) {

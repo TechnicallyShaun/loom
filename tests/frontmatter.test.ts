@@ -9,6 +9,8 @@ import {
   copilotSubstitutions,
   codexSubstitutions,
   deriveArgumentHint,
+  extractSkillRefs,
+  validateSkillRefs,
 } from "../src/utils/frontmatter.js";
 import { CLAUDE_TOOL_MAP, COPILOT_TOOL_MAP } from "../src/compilers/tool-mappings.js";
 
@@ -195,5 +197,48 @@ describe("deriveArgumentHint", () => {
 
   it("deduplicates repeated arg names", () => {
     expect(deriveArgumentHint("{arg:id} then {arg:id}")).toBe("<id>");
+  });
+});
+
+describe("extractSkillRefs", () => {
+  it("extracts /skill-name references from content", () => {
+    const refs = extractSkillRefs("Run /analyse to understand.\nThen /commit to save.");
+    expect(refs).toEqual(["analyse", "commit"]);
+  });
+
+  it("handles /skill-name at start of line", () => {
+    const refs = extractSkillRefs("/analyse the ticket");
+    expect(refs).toEqual(["analyse"]);
+  });
+
+  it("deduplicates repeated references", () => {
+    const refs = extractSkillRefs("Use /analyse twice. Run /analyse again.");
+    expect(refs).toEqual(["analyse"]);
+  });
+
+  it("returns empty for no skill references", () => {
+    expect(extractSkillRefs("No skills here")).toEqual([]);
+  });
+
+  it("ignores paths like /src/file", () => {
+    // /src/file has a slash after src, so "src" wouldn't match the boundary
+    const refs = extractSkillRefs("Check /tmp for files");
+    expect(refs).toEqual(["tmp"]);
+  });
+});
+
+describe("validateSkillRefs", () => {
+  it("returns unknown skill references", () => {
+    const unknown = validateSkillRefs("Run /analyse then /commit", ["analyse"]);
+    expect(unknown).toEqual(["commit"]);
+  });
+
+  it("returns empty when all refs are known", () => {
+    const unknown = validateSkillRefs("Run /analyse then /commit", ["analyse", "commit"]);
+    expect(unknown).toEqual([]);
+  });
+
+  it("returns empty when no refs exist", () => {
+    expect(validateSkillRefs("No skills", ["analyse"])).toEqual([]);
   });
 });

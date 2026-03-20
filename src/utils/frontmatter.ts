@@ -164,6 +164,28 @@ export function codexSubstitutions(skillName: string, projectPath: string, loomR
   };
 }
 
+/** Extract /skill-name references from content */
+export function extractSkillRefs(content: string): string[] {
+  const refs: string[] = [];
+  const pattern = /(?:^|\s)\/([a-zA-Z0-9_-]+)(?:\s|$|[.,;:!?)])/gm;
+  let match;
+  while ((match = pattern.exec(content)) !== null) {
+    if (!refs.includes(match[1])) {
+      refs.push(match[1]);
+    }
+  }
+  return refs;
+}
+
+/** Validate skill references against known skill names, return unknown refs */
+export function validateSkillRefs(
+  content: string,
+  knownSkills: string[],
+): string[] {
+  const refs = extractSkillRefs(content);
+  return refs.filter((r) => !knownSkills.includes(r));
+}
+
 /** Expand loom-neutral tool names through a target mapping */
 export function mapToolNames(
   tools: string[],

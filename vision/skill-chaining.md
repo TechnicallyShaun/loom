@@ -28,9 +28,13 @@ Claude resolves `/skill-name` at runtime, loads the skill, and executes it. Agen
 
 A `/skill-name` reference in a Copilot skill is meaningless — it won't trigger anything.
 
-### Codex CLI / Gemini CLI
+### Codex CLI
 
-No skill support at all. Instructions only.
+Codex CLI supports skills (`.codex/skills/<name>/SKILL.md`). Skill invocation behaviour via `/skill-name` is untested — needs validation.
+
+### Gemini CLI
+
+Gemini CLI supports skills (`.gemini/skills/<name>/SKILL.md`). Skill invocation behaviour via `/skill-name` is untested — needs validation.
 
 ## Loom Strategy
 
@@ -44,35 +48,33 @@ Use `/skill-name` in loom source. This is natural, readable, and matches Claude'
 3. Run /commit to save
 ```
 
-### Compilation per target
+### Current compilation
+
+All four targets now support skills. `/skill-name` passes through unchanged for all targets:
 
 | Target | Strategy |
 |---|---|
 | Claude | Pass through — `/skill-name` works natively |
-| Copilot | Rewrite to description-based hints so Copilot's auto-discovery can find the right skill |
-| Codex/Gemini | Inline the referenced skill content (since these targets don't support skills at all) |
+| Copilot | Pass through — auto-discovery may match, needs testing |
+| Codex | Pass through — needs testing |
+| Gemini | Pass through — needs testing |
 
-### Copilot rewriting
+### Future: description-based rewriting (if needed)
 
-Replace `/skill-name` with a natural language reference that matches the skill's description. Loom knows all skill descriptions at compile time.
+If testing reveals that Copilot/Codex/Gemini cannot chain skills via `/skill-name`, loom can rewrite references to description-based hints. Loom knows all skill descriptions at compile time.
 
 Source:
 ```markdown
 Run /analyse to understand the ticket.
 ```
 
-If the `analyse` skill has `description: "Analyse a ticket and create an implementation plan"`:
+If the `analyse` skill has `description: "Analyse a ticket and create an implementation plan"`, the rewritten output would be:
 
-Copilot output:
 ```markdown
 Analyse the ticket and create an implementation plan.
 ```
 
-This leans on Copilot's auto-discovery — if the description-based text is close enough, Copilot will load the relevant skill automatically.
-
-### Codex/Gemini inlining
-
-For targets with no skill support, inline the referenced skill's content directly into the instructions. This produces a larger single document but preserves the full workflow.
+This is deferred until real-world testing shows it's needed.
 
 ## Agent `skills:` Field
 
@@ -87,7 +89,11 @@ skills:
 ---
 ```
 
-This tells Claude to pre-load these skills. For Copilot, this field is dropped (auto-discovery handles it). For Codex/Gemini, the skills are inlined into the instructions.
+This tells Claude to pre-load these skills. For other targets, this field is dropped (auto-discovery handles it).
+
+## Compile-Time Validation
+
+Loom validates `/skill-name` references at compile time. If a skill or agent references a `/skill-name` that doesn't exist in the merged project, loom logs a warning. This catches typos and missing dependencies without blocking compilation.
 
 ## Test This Assumption
 

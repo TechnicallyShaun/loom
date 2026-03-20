@@ -86,6 +86,18 @@ describe("readSkillsDir", () => {
     expect(paths).toEqual(["refs/spec.md", "scripts/trac.ts"]);
   });
 
+  it("excludes .env files from assets", () => {
+    writeFile(path.join(tmpDir, "cleanse", "SKILL.md"), "# Cleanse");
+    writeFile(path.join(tmpDir, "cleanse", "trac.ts"), "code");
+    writeFile(path.join(tmpDir, "cleanse", ".env"), "SECRET=123");
+    writeFile(path.join(tmpDir, "cleanse", ".env.local"), "LOCAL=456");
+    writeFile(path.join(tmpDir, "cleanse", ".env.production"), "PROD=789");
+
+    const result = readSkillsDir(tmpDir);
+    expect(result[0].assets).toHaveLength(1);
+    expect(result[0].assets![0].relativePath).toBe("trac.ts");
+  });
+
   it("returns no assets when only SKILL.md exists", () => {
     writeFile(path.join(tmpDir, "simple", "SKILL.md"), "# Simple");
 

@@ -16,6 +16,13 @@ export function readMarkdownDir(dir: string): SourceContent[] {
   }));
 }
 
+/** File patterns that should never be compiled or deployed */
+const EXCLUDED_ASSET_PATTERNS = [/^\.env($|\.)/, /^\.env\.local$/];
+
+function isExcludedAsset(name: string): boolean {
+  return EXCLUDED_ASSET_PATTERNS.some((p) => p.test(name));
+}
+
 /** Read all non-SKILL.md files from a skill directory as assets */
 function readSkillAssets(skillDir: string, prefix = ""): AssetFile[] {
   const assets: AssetFile[] = [];
@@ -23,7 +30,7 @@ function readSkillAssets(skillDir: string, prefix = ""): AssetFile[] {
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
     if (entry.isDirectory()) {
       assets.push(...readSkillAssets(path.join(skillDir, entry.name), rel));
-    } else if (entry.name !== "SKILL.md") {
+    } else if (entry.name !== "SKILL.md" && !isExcludedAsset(entry.name)) {
       assets.push({
         relativePath: rel,
         content: fs.readFileSync(path.join(skillDir, entry.name)),
