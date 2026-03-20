@@ -37,13 +37,19 @@ export function compileClaude(project: MergedProject): CompiledFile[] {
     });
   }
 
-  // Skills → .claude/skills/<name>/SKILL.md
+  // Skills → .claude/skills/<name>/SKILL.md + assets
   for (const skill of project.skills) {
     const fm = mapSkillFrontmatter(skill.frontmatter ?? {});
     files.push({
       relativePath: `.claude/skills/${skill.name}/SKILL.md`,
       content: serializeFrontmatter(fm, skill.content) + "\n",
     });
+    for (const asset of skill.assets ?? []) {
+      files.push({
+        relativePath: `.claude/skills/${skill.name}/${asset.relativePath}`,
+        content: asset.content,
+      });
+    }
   }
 
   // Agents → .claude/agents/<name>.md

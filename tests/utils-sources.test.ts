@@ -60,6 +60,38 @@ describe("readSkillsDir", () => {
     expect(result[0]).toEqual({ name: "analyse", content: "analyse skill", frontmatter: {} });
     expect(result[1]).toEqual({ name: "cleansing", content: "cleansing skill", frontmatter: {} });
   });
+
+  it("reads supporting files as assets", () => {
+    writeFile(path.join(tmpDir, "cleanse", "SKILL.md"), "# Cleanse");
+    writeFile(path.join(tmpDir, "cleanse", "trac.ts"), "console.log('hello')");
+    writeFile(path.join(tmpDir, "cleanse", "pointing-guide.md"), "# Guide");
+
+    const result = readSkillsDir(tmpDir);
+    expect(result).toHaveLength(1);
+    expect(result[0].assets).toBeDefined();
+    expect(result[0].assets).toHaveLength(2);
+    const names = result[0].assets!.map((a) => a.relativePath).sort();
+    expect(names).toEqual(["pointing-guide.md", "trac.ts"]);
+    expect(result[0].assets![0].content).toBeInstanceOf(Buffer);
+  });
+
+  it("reads nested asset subdirectories", () => {
+    writeFile(path.join(tmpDir, "cleanse", "SKILL.md"), "# Cleanse");
+    writeFile(path.join(tmpDir, "cleanse", "scripts", "trac.ts"), "api code");
+    writeFile(path.join(tmpDir, "cleanse", "refs", "spec.md"), "spec content");
+
+    const result = readSkillsDir(tmpDir);
+    expect(result[0].assets).toHaveLength(2);
+    const paths = result[0].assets!.map((a) => a.relativePath).sort();
+    expect(paths).toEqual(["refs/spec.md", "scripts/trac.ts"]);
+  });
+
+  it("returns no assets when only SKILL.md exists", () => {
+    writeFile(path.join(tmpDir, "simple", "SKILL.md"), "# Simple");
+
+    const result = readSkillsDir(tmpDir);
+    expect(result[0].assets).toBeUndefined();
+  });
 });
 
 describe("readAgentsDir", () => {

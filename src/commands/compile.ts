@@ -73,7 +73,11 @@ export async function compile(args: string[]): Promise<void> {
     for (const file of files) {
       const filePath = path.join(outDir, file.relativePath);
       ensureDir(path.dirname(filePath));
-      fs.writeFileSync(filePath, file.content, "utf-8");
+      if (Buffer.isBuffer(file.content)) {
+        fs.writeFileSync(filePath, file.content);
+      } else {
+        fs.writeFileSync(filePath, file.content, "utf-8");
+      }
     }
 
     compiled.push(name);
@@ -106,7 +110,11 @@ export async function compile(args: string[]): Promise<void> {
       for (const file of targetFiles) {
         const filePath = path.join(globalOutDir, target, file.relativePath);
         ensureDir(path.dirname(filePath));
-        fs.writeFileSync(filePath, file.content, "utf-8");
+        if (Buffer.isBuffer(file.content)) {
+          fs.writeFileSync(filePath, file.content);
+        } else {
+          fs.writeFileSync(filePath, file.content, "utf-8");
+        }
       }
       totalFiles += targetFiles.length;
     }

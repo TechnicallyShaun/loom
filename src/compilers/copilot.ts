@@ -36,13 +36,19 @@ export function compileCopilot(project: MergedProject): CompiledFile[] {
     });
   }
 
-  // Skills → .github/skills/<name>/SKILL.md
+  // Skills → .github/skills/<name>/SKILL.md + assets
   for (const skill of project.skills) {
     const fm = mapSkillFrontmatter(skill.frontmatter ?? {});
     files.push({
       relativePath: `.github/skills/${skill.name}/SKILL.md`,
       content: serializeFrontmatter(fm, skill.content) + "\n",
     });
+    for (const asset of skill.assets ?? []) {
+      files.push({
+        relativePath: `.github/skills/${skill.name}/${asset.relativePath}`,
+        content: asset.content,
+      });
+    }
   }
 
   // Agents → .github/agents/<name>.agent.md

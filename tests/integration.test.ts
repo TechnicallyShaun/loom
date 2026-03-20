@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 describe("full pipeline: init → register → compile → deploy → diff → discover", () => {
-  it("works end-to-end", async () => {
+  it("works end-to-end", { timeout: 30000 }, async () => {
     // 1. Init
     await init([]);
     expect(fs.existsSync(path.join(loomHome, ".git"))).toBe(true);

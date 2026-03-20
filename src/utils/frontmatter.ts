@@ -28,6 +28,23 @@ export function serializeFrontmatter(
   return `---\n${yaml}\n---\n\n${body}`;
 }
 
+/** Serialize a flat record to TOML format (supports strings, numbers, booleans, arrays of strings) */
+export function serializeToml(data: Record<string, unknown>): string {
+  const lines: string[] = [];
+  for (const [key, value] of Object.entries(data)) {
+    if (value == null) continue;
+    if (typeof value === "string") {
+      lines.push(`${key} = "${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`);
+    } else if (typeof value === "number" || typeof value === "boolean") {
+      lines.push(`${key} = ${value}`);
+    } else if (Array.isArray(value)) {
+      const items = value.map((v) => `"${String(v).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`);
+      lines.push(`${key} = [${items.join(", ")}]`);
+    }
+  }
+  return lines.join("\n");
+}
+
 /** Expand loom-neutral tool names through a target mapping */
 export function mapToolNames(
   tools: string[],

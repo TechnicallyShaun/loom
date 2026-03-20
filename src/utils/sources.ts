@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { SourceContent } from "../types/index.js";
+import type { SourceContent, AssetFile } from "../types/index.js";
 import { parseFrontmatter } from "./frontmatter.js";
 
 /** Read all .md files from a directory, sorted by name */
@@ -16,6 +16,23 @@ export function readMarkdownDir(dir: string): SourceContent[] {
   }));
 }
 
+/** Read all non-SKILL.md files from a skill directory as assets */
+function readSkillAssets(skillDir: string, prefix = ""): AssetFile[] {
+  const assets: AssetFile[] = [];
+  for (const entry of fs.readdirSync(skillDir, { withFileTypes: true })) {
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) {
+      assets.push(...readSkillAssets(path.join(skillDir, entry.name), rel));
+    } else if (entry.name !== "SKILL.md") {
+      assets.push({
+        relativePath: rel,
+        content: fs.readFileSync(path.join(skillDir, entry.name)),
+      });
+    }
+  }
+  return assets;
+}
+
 /** Read skills — each skill is a folder with SKILL.md inside */
 export function readSkillsDir(dir: string): SourceContent[] {
   if (!fs.existsSync(dir)) return [];
@@ -23,11 +40,18 @@ export function readSkillsDir(dir: string): SourceContent[] {
   const skills: SourceContent[] = [];
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      const skillFile = path.join(dir, entry.name, "SKILL.md");
+      const skillDir = path.join(dir, entry.name);
+      const skillFile = path.join(skillDir, "SKILL.md");
       if (fs.existsSync(skillFile)) {
         const raw = fs.readFileSync(skillFile, "utf-8").trim();
         const { frontmatter, body } = parseFrontmatter(raw);
-        skills.push({ name: entry.name, content: body, frontmatter });
+        const assets = readSkillAssets(skillDir);
+        skills.push({
+          name: entry.name,
+          content: body,
+          frontmatter,
+          ...(assets.length > 0 ? { assets } : {}),
+        });
       }
     }
   }

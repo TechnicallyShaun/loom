@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseFrontmatter, serializeFrontmatter, mapToolNames } from "../src/utils/frontmatter.js";
+import { parseFrontmatter, serializeFrontmatter, serializeToml, mapToolNames } from "../src/utils/frontmatter.js";
 import { CLAUDE_TOOL_MAP, COPILOT_TOOL_MAP } from "../src/compilers/tool-mappings.js";
 
 describe("parseFrontmatter", () => {
@@ -88,5 +88,32 @@ describe("mapToolNames", () => {
   it("expands all Claude mappings", () => {
     const all = mapToolNames(["read", "edit", "execute", "search", "agent", "web"], CLAUDE_TOOL_MAP);
     expect(all).toEqual(["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent", "WebSearch", "WebFetch"]);
+  });
+});
+
+describe("serializeToml", () => {
+  it("serializes strings", () => {
+    const result = serializeToml({ name: "work", description: "Do things" });
+    expect(result).toBe('name = "work"\ndescription = "Do things"');
+  });
+
+  it("serializes numbers and booleans", () => {
+    const result = serializeToml({ max_turns: 30, enabled: true });
+    expect(result).toBe("max_turns = 30\nenabled = true");
+  });
+
+  it("serializes arrays of strings", () => {
+    const result = serializeToml({ tools: ["read", "edit"] });
+    expect(result).toBe('tools = ["read", "edit"]');
+  });
+
+  it("escapes quotes and backslashes", () => {
+    const result = serializeToml({ msg: 'say "hello"' });
+    expect(result).toBe('msg = "say \\"hello\\""');
+  });
+
+  it("skips null values", () => {
+    const result = serializeToml({ name: "test", missing: null });
+    expect(result).toBe('name = "test"');
   });
 });

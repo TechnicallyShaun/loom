@@ -132,6 +132,27 @@ describe("compileClaude", () => {
     expect(agent!.content).toBe("# Basic\n\nNo frontmatter.\n");
   });
 
+  it("copies skill assets to compiled output", () => {
+    const project = makeProject({
+      skills: [
+        {
+          name: "cleanse",
+          content: "# Cleanse",
+          assets: [
+            { relativePath: "trac.ts", content: Buffer.from("console.log('hi')") },
+            { relativePath: "scripts/validate.sh", content: Buffer.from("#!/bin/bash") },
+          ],
+        },
+      ],
+    });
+    const files = compileClaude(project);
+    const ts = files.find((f) => f.relativePath === ".claude/skills/cleanse/trac.ts");
+    expect(ts).toBeDefined();
+    expect(Buffer.isBuffer(ts!.content)).toBe(true);
+    const sh = files.find((f) => f.relativePath === ".claude/skills/cleanse/scripts/validate.sh");
+    expect(sh).toBeDefined();
+  });
+
   it("returns empty for no instructions", () => {
     const files = compileClaude(makeProject({ instructions: "" }));
     expect(files.find((f) => f.relativePath === "CLAUDE.md")).toBeUndefined();
@@ -213,27 +234,156 @@ describe("compileCopilot", () => {
     expect(skill!.content).not.toContain("tools:");
     expect(skill!.content).not.toContain("allowed-tools:");
   });
+
+  it("copies skill assets to compiled output", () => {
+    const project = makeProject({
+      skills: [
+        {
+          name: "cleanse",
+          content: "# Cleanse",
+          assets: [{ relativePath: "trac.ts", content: Buffer.from("api code") }],
+        },
+      ],
+    });
+    const files = compileCopilot(project);
+    const ts = files.find((f) => f.relativePath === ".github/skills/cleanse/trac.ts");
+    expect(ts).toBeDefined();
+    expect(Buffer.isBuffer(ts!.content)).toBe(true);
+  });
 });
 
 describe("compileCodex", () => {
-  it("produces AGENTS.md from instructions only", () => {
+  it("produces AGENTS.md from instructions", () => {
     const files = compileCodex(makeProject());
-    expect(files).toHaveLength(1);
-    expect(files[0].relativePath).toBe("AGENTS.md");
-    expect(files[0].content).toContain("Instructions");
+    const agents = files.find((f) => f.relativePath === "AGENTS.md");
+    expect(agents).toBeDefined();
+    expect(agents!.content).toContain("Instructions");
   });
 
-  it("ignores skills and agents", () => {
+  it("produces skill files under .codex/skills/", () => {
     const files = compileCodex(makeProject());
-    expect(files.every((f) => !f.relativePath.includes("skills"))).toBe(true);
+    const skill = files.find((f) => f.relativePath === ".codex/skills/analyse/SKILL.md");
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain("Analyse everything");
+  });
+
+  it("produces agent files as TOML under .codex/agents/", () => {
+    const project = makeProject({
+      agents: [
+        {
+          name: "work",
+          content: "Do work.",
+          frontmatter: {
+            name: "work",
+            description: "Orchestrate development work",
+            model: "o3",
+          },
+        },
+      ],
+    });
+    const files = compileCodex(project);
+    const agent = files.find((f) => f.relativePath === ".codex/agents/work.toml");
+    expect(agent).toBeDefined();
+    expect(agent!.content).toContain('name = "work"');
+    expect(agent!.content).toContain('description = "Orchestrate development work"');
+    expect(agent!.content).toContain('model = "o3"');
+    expect(agent!.content).toContain('developer_instructions = "Do work."');
+  });
+
+  it("drops skills and disallowed-tools from agent TOML", () => {
+    const project = makeProject({
+      agents: [
+        {
+          name: "safe",
+          content: "Safe agent.",
+          frontmatter: {
+            name: "safe",
+            description: "No web",
+            skills: ["analyse"],
+            "disallowed-tools": ["web"],
+          },
+        },
+      ],
+    });
+    const files = compileCodex(project);
+    const agent = files.find((f) => f.relativePath === ".codex/agents/safe.toml");
+    expect(agent!.content).not.toContain("skills");
+    expect(agent!.content).not.toContain("disallowed");
+  });
+
+  it("copies skill assets", () => {
+    const project = makeProject({
+      skills: [
+        {
+          name: "cleanse",
+          content: "# Cleanse",
+          assets: [{ relativePath: "trac.ts", content: Buffer.from("code") }],
+        },
+      ],
+    });
+    const files = compileCodex(project);
+    expect(files.find((f) => f.relativePath === ".codex/skills/cleanse/trac.ts")).toBeDefined();
   });
 });
 
 describe("compileGemini", () => {
-  it("produces GEMINI.md from instructions only", () => {
+  it("produces GEMINI.md from instructions", () => {
     const files = compileGemini(makeProject());
-    expect(files).toHaveLength(1);
-    expect(files[0].relativePath).toBe("GEMINI.md");
+    const gemini = files.find((f) => f.relativePath === "GEMINI.md");
+    expect(gemini).toBeDefined();
+  });
+
+  it("produces skill files under .gemini/skills/", () => {
+    const files = compileGemini(makeProject());
+    const skill = files.find((f) => f.relativePath === ".gemini/skills/analyse/SKILL.md");
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain("Analyse everything");
+  });
+
+  it("produces agent files under .gemini/agents/", () => {
+    const files = compileGemini(makeProject());
+    const agent = files.find((f) => f.relativePath === ".gemini/agents/work.md");
+    expect(agent).toBeDefined();
+    expect(agent!.content).toContain("Orchestrate work");
+  });
+
+  it("maps agent frontmatter, drops skills and disallowed-tools", () => {
+    const project = makeProject({
+      agents: [
+        {
+          name: "work",
+          content: "Do work.",
+          frontmatter: {
+            name: "work",
+            description: "Orchestrate",
+            tools: ["read", "edit"],
+            model: "gemini-3-pro",
+            skills: ["analyse"],
+            "disallowed-tools": ["web"],
+          },
+        },
+      ],
+    });
+    const files = compileGemini(project);
+    const agent = files.find((f) => f.relativePath === ".gemini/agents/work.md");
+    expect(agent!.content).toContain("model: gemini-3-pro");
+    expect(agent!.content).toContain("tools:");
+    expect(agent!.content).not.toContain("skills:");
+    expect(agent!.content).not.toContain("disallowed");
+  });
+
+  it("copies skill assets", () => {
+    const project = makeProject({
+      skills: [
+        {
+          name: "cleanse",
+          content: "# Cleanse",
+          assets: [{ relativePath: "trac.ts", content: Buffer.from("code") }],
+        },
+      ],
+    });
+    const files = compileGemini(project);
+    expect(files.find((f) => f.relativePath === ".gemini/skills/cleanse/trac.ts")).toBeDefined();
   });
 });
 
@@ -242,14 +392,22 @@ describe("compileForTarget", () => {
     const project = makeProject();
     const claude = compileForTarget("claude", project);
     expect(claude.some((f) => f.relativePath === "CLAUDE.md")).toBe(true);
+    expect(claude.some((f) => f.relativePath.startsWith(".claude/skills/"))).toBe(true);
+    expect(claude.some((f) => f.relativePath.startsWith(".claude/agents/"))).toBe(true);
 
     const copilot = compileForTarget("copilot", project);
     expect(copilot.some((f) => f.relativePath === ".github/copilot-instructions.md")).toBe(true);
+    expect(copilot.some((f) => f.relativePath.startsWith(".github/skills/"))).toBe(true);
+    expect(copilot.some((f) => f.relativePath.startsWith(".github/agents/"))).toBe(true);
 
     const codex = compileForTarget("codex", project);
     expect(codex.some((f) => f.relativePath === "AGENTS.md")).toBe(true);
+    expect(codex.some((f) => f.relativePath.startsWith(".codex/skills/"))).toBe(true);
+    expect(codex.some((f) => f.relativePath.endsWith(".toml"))).toBe(true);
 
     const gemini = compileForTarget("gemini", project);
     expect(gemini.some((f) => f.relativePath === "GEMINI.md")).toBe(true);
+    expect(gemini.some((f) => f.relativePath.startsWith(".gemini/skills/"))).toBe(true);
+    expect(gemini.some((f) => f.relativePath.startsWith(".gemini/agents/"))).toBe(true);
   });
 });

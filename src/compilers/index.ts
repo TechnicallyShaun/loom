@@ -33,8 +33,16 @@ export function compileForTargetUserLevel(
         ...f,
         relativePath: stripPrefix(f.relativePath, ".github/"),
       }));
-    default:
-      return [];
+    case "gemini":
+      return compileGemini(project).map((f) => ({
+        ...f,
+        relativePath: stripPrefix(f.relativePath, ".gemini/"),
+      }));
+    case "codex":
+      return compileCodex(project).map((f) => ({
+        ...f,
+        relativePath: stripPrefix(f.relativePath, ".codex/"),
+      }));
   }
 }
 

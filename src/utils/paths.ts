@@ -39,8 +39,10 @@ export function userLevelDir(target: TargetType, home = os.homedir()): string {
       return path.join(home, ".claude");
     case "copilot":
       return path.join(home, ".copilot");
-    default:
-      return "";
+    case "gemini":
+      return path.join(home, ".gemini");
+    case "codex":
+      return path.join(home, ".codex");
   }
 }
 
