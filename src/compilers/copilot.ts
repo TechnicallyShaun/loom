@@ -1,12 +1,34 @@
 import type { MergedProject, CompiledFile } from "../types/index.js";
+import { serializeFrontmatter, mapToolNames } from "../utils/frontmatter.js";
+import { COPILOT_TOOL_MAP } from "./tool-mappings.js";
+
+function mapSkillFrontmatter(fm: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (fm.name != null) out.name = fm.name;
+  if (fm.description != null) out.description = fm.description;
+  if (fm["argument-hint"] != null) out["argument-hint"] = fm["argument-hint"];
+  if (fm["user-invocable"] != null) out["user-invocable"] = fm["user-invocable"];
+  if (fm["disable-model-invocation"] != null)
+    out["disable-model-invocation"] = fm["disable-model-invocation"];
+  // tools: dropped — Copilot has no tool restrictions on skills
+  return out;
+}
+
+function mapAgentFrontmatter(fm: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (fm.name != null) out.name = fm.name;
+  if (fm.description != null) out.description = fm.description;
+  // skills: dropped — Copilot auto-discovers skills by description
+  if (Array.isArray(fm.tools)) out.tools = mapToolNames(fm.tools, COPILOT_TOOL_MAP);
+  // disallowed-tools: dropped — no Copilot equivalent
+  // model: dropped — different model ecosystem
+  return out;
+}
 
 export function compileCopilot(project: MergedProject): CompiledFile[] {
   const files: CompiledFile[] = [];
 
   // Instructions → .github/copilot-instructions.md
-  // Also supports: .github/instructions/*.instructions.md (with applyTo globs)
-  // and AGENTS.md (multi-agent compatible, recognised by multiple AI agents).
-  // Priority: personal > repository > organisation.
   if (project.instructions) {
     files.push({
       relativePath: ".github/copilot-instructions.md",
@@ -15,28 +37,20 @@ export function compileCopilot(project: MergedProject): CompiledFile[] {
   }
 
   // Skills → .github/skills/<name>/SKILL.md
-  // Copilot March 2026: Skills use the AgentSkills open standard (agentskills.io).
-  // Recognised directories: .github/skills/, .claude/skills/, .agents/skills/
-  // Personal skills: ~/.copilot/skills/
-  // Frontmatter: name, description, argument-hint
-  // Skills are progressively loaded: name+description for discovery,
-  // full instructions when matched, resources only when referenced.
   for (const skill of project.skills) {
+    const fm = mapSkillFrontmatter(skill.frontmatter ?? {});
     files.push({
       relativePath: `.github/skills/${skill.name}/SKILL.md`,
-      content: skill.content + "\n",
+      content: serializeFrontmatter(fm, skill.content) + "\n",
     });
   }
 
   // Agents → .github/agents/<name>.agent.md
-  // Copilot March 2026: Custom agents (formerly "custom chat modes").
-  // Define specialist persona, instructions, allowed tools, and handoffs.
-  // Handoffs chain agents into guided workflows (Plan > Implement > Review).
-  // Can run as subagents, background agents, and cloud agents.
   for (const agent of project.agents) {
+    const fm = mapAgentFrontmatter(agent.frontmatter ?? {});
     files.push({
       relativePath: `.github/agents/${agent.name}.agent.md`,
-      content: agent.content + "\n",
+      content: serializeFrontmatter(fm, agent.content) + "\n",
     });
   }
 

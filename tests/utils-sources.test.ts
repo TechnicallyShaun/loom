@@ -6,6 +6,7 @@ import {
   readAgentsDir,
   mergeLayers,
   concatInstructions,
+  demoteHeadings,
   ensureDir,
 } from "../src/utils/sources.js";
 import { makeTempDir, cleanup, writeFile } from "./helpers.js";
@@ -56,8 +57,8 @@ describe("readSkillsDir", () => {
 
     const result = readSkillsDir(tmpDir);
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({ name: "analyse", content: "analyse skill" });
-    expect(result[1]).toEqual({ name: "cleansing", content: "cleansing skill" });
+    expect(result[0]).toEqual({ name: "analyse", content: "analyse skill", frontmatter: {} });
+    expect(result[1]).toEqual({ name: "cleansing", content: "cleansing skill", frontmatter: {} });
   });
 });
 
@@ -65,7 +66,7 @@ describe("readAgentsDir", () => {
   it("reads .md files as agents", () => {
     writeFile(path.join(tmpDir, "work.md"), "work agent");
     const result = readAgentsDir(tmpDir);
-    expect(result).toEqual([{ name: "work", content: "work agent" }]);
+    expect(result).toEqual([{ name: "work", content: "work agent", frontmatter: {} }]);
   });
 });
 
@@ -97,12 +98,33 @@ describe("mergeLayers", () => {
   });
 });
 
+describe("demoteHeadings", () => {
+  it("demotes all heading levels by one", () => {
+    expect(demoteHeadings("# H1")).toBe("## H1");
+    expect(demoteHeadings("## H2")).toBe("### H2");
+    expect(demoteHeadings("### H3")).toBe("#### H3");
+  });
+
+  it("handles multiple headings", () => {
+    const input = "# Title\n\nText\n\n## Sub\n\nMore";
+    const result = demoteHeadings(input);
+    expect(result).toBe("## Title\n\nText\n\n### Sub\n\nMore");
+  });
+
+  it("does not affect non-heading lines", () => {
+    expect(demoteHeadings("no headings here")).toBe("no headings here");
+    expect(demoteHeadings("code: # not a heading")).toBe("code: # not a heading");
+  });
+});
+
 describe("concatInstructions", () => {
-  it("concatenates global then project with separator", () => {
-    const global = [{ name: "a", content: "global stuff" }];
-    const project = [{ name: "b", content: "project stuff" }];
+  it("concatenates global then project with heading demotion", () => {
+    const global = [{ name: "a", content: "# Global Title\n\nglobal stuff" }];
+    const project = [{ name: "b", content: "# Project Title\n\nproject stuff" }];
     const result = concatInstructions(global, project);
-    expect(result).toBe("global stuff\n\n---\n\nproject stuff");
+    expect(result).toBe(
+      "# Instructions\n\n## Global Title\n\nglobal stuff\n\n---\n\n## Project Title\n\nproject stuff",
+    );
   });
 
   it("handles empty arrays", () => {
@@ -110,8 +132,22 @@ describe("concatInstructions", () => {
   });
 
   it("handles global-only", () => {
-    const global = [{ name: "a", content: "only global" }];
-    expect(concatInstructions(global, [])).toBe("only global");
+    const global = [{ name: "a", content: "# Only Global\n\ncontent" }];
+    expect(concatInstructions(global, [])).toBe("# Instructions\n\n## Only Global\n\ncontent");
+  });
+
+  it("demotes nested headings", () => {
+    const global = [{ name: "a", content: "# Title\n\n## Sub\n\n### Deep" }];
+    const result = concatInstructions(global, []);
+    expect(result).toContain("## Title");
+    expect(result).toContain("### Sub");
+    expect(result).toContain("#### Deep");
+  });
+
+  it("derives section title from filename when no heading", () => {
+    const global = [{ name: "01-conventions", content: "Use strict mode." }];
+    const result = concatInstructions(global, []);
+    expect(result).toBe("# Instructions\n\n## Conventions\n\nUse strict mode.");
   });
 });
 

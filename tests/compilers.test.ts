@@ -43,12 +43,19 @@ describe("compileClaude", () => {
     expect(agent!.content).toContain("Orchestrate work");
   });
 
-  it("preserves existing frontmatter in agent files", () => {
+  it("maps agent frontmatter to Claude fields", () => {
     const project = makeProject({
       agents: [
         {
           name: "work",
-          content: "---\ndescription: Orchestrate development work\nmodel: sonnet\n---\n\nDo work.",
+          content: "Do work.",
+          frontmatter: {
+            name: "work",
+            description: "Orchestrate development work",
+            skills: ["analyse", "test-plan"],
+            tools: ["read", "edit", "execute"],
+            model: "sonnet",
+          },
         },
       ],
     });
@@ -57,7 +64,72 @@ describe("compileClaude", () => {
     expect(agent).toBeDefined();
     expect(agent!.content).toContain("description: Orchestrate development work");
     expect(agent!.content).toContain("model: sonnet");
+    expect(agent!.content).toContain("skills:");
+    expect(agent!.content).toContain("- analyse");
+    // Tools should be mapped to Claude names
+    expect(agent!.content).toContain("Read");
+    expect(agent!.content).toContain("Write");
+    expect(agent!.content).toContain("Edit");
+    expect(agent!.content).toContain("Bash");
     expect(agent!.content).toContain("Do work.");
+  });
+
+  it("maps skill frontmatter tools to allowed-tools", () => {
+    const project = makeProject({
+      skills: [
+        {
+          name: "analyse",
+          content: "# Analyse\n\nDo analysis.",
+          frontmatter: {
+            name: "analyse",
+            description: "Analyse a ticket",
+            tools: ["read", "search"],
+          },
+        },
+      ],
+    });
+    const files = compileClaude(project);
+    const skill = files.find((f) => f.relativePath === ".claude/skills/analyse/SKILL.md");
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain("allowed-tools:");
+    expect(skill!.content).toContain("Read");
+    expect(skill!.content).toContain("Grep");
+    expect(skill!.content).toContain("Glob");
+    // Should NOT contain loom-neutral "tools:" key
+    expect(skill!.content).not.toMatch(/^tools:/m);
+  });
+
+  it("maps disallowed-tools to disallowedTools", () => {
+    const project = makeProject({
+      agents: [
+        {
+          name: "safe",
+          content: "Safe agent.",
+          frontmatter: {
+            name: "safe",
+            description: "No web access",
+            "disallowed-tools": ["web"],
+          },
+        },
+      ],
+    });
+    const files = compileClaude(project);
+    const agent = files.find((f) => f.relativePath === ".claude/agents/safe.md");
+    expect(agent!.content).toContain("disallowedTools:");
+    expect(agent!.content).toContain("WebSearch");
+    expect(agent!.content).toContain("WebFetch");
+  });
+
+  it("handles skills and agents without frontmatter", () => {
+    const project = makeProject({
+      skills: [{ name: "simple", content: "# Simple\n\nNo frontmatter." }],
+      agents: [{ name: "basic", content: "# Basic\n\nNo frontmatter." }],
+    });
+    const files = compileClaude(project);
+    const skill = files.find((f) => f.relativePath === ".claude/skills/simple/SKILL.md");
+    expect(skill!.content).toBe("# Simple\n\nNo frontmatter.\n");
+    const agent = files.find((f) => f.relativePath === ".claude/agents/basic.md");
+    expect(agent!.content).toBe("# Basic\n\nNo frontmatter.\n");
   });
 
   it("returns empty for no instructions", () => {
@@ -85,6 +157,61 @@ describe("compileCopilot", () => {
     const agent = files.find((f) => f.relativePath === ".github/agents/work.agent.md");
     expect(agent).toBeDefined();
     expect(agent!.content).toContain("Orchestrate work");
+  });
+
+  it("drops skills, model, and disallowed-tools from agent frontmatter", () => {
+    const project = makeProject({
+      agents: [
+        {
+          name: "work",
+          content: "Do work.",
+          frontmatter: {
+            name: "work",
+            description: "Orchestrate development work",
+            skills: ["analyse"],
+            tools: ["read", "edit"],
+            "disallowed-tools": ["web"],
+            model: "sonnet",
+          },
+        },
+      ],
+    });
+    const files = compileCopilot(project);
+    const agent = files.find((f) => f.relativePath === ".github/agents/work.agent.md");
+    expect(agent).toBeDefined();
+    expect(agent!.content).toContain("name: work");
+    expect(agent!.content).toContain("description: Orchestrate development work");
+    // Tools should be mapped to Copilot names
+    expect(agent!.content).toContain("read");
+    expect(agent!.content).toContain("edit");
+    // These should NOT be present
+    expect(agent!.content).not.toContain("skills:");
+    expect(agent!.content).not.toContain("disallowedTools:");
+    expect(agent!.content).not.toContain("disallowed-tools:");
+    expect(agent!.content).not.toContain("model:");
+  });
+
+  it("drops tools from skill frontmatter", () => {
+    const project = makeProject({
+      skills: [
+        {
+          name: "analyse",
+          content: "# Analyse\n\nDo analysis.",
+          frontmatter: {
+            name: "analyse",
+            description: "Analyse a ticket",
+            tools: ["read", "search"],
+          },
+        },
+      ],
+    });
+    const files = compileCopilot(project);
+    const skill = files.find((f) => f.relativePath === ".github/skills/analyse/SKILL.md");
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain("name: analyse");
+    expect(skill!.content).toContain("description: Analyse a ticket");
+    expect(skill!.content).not.toContain("tools:");
+    expect(skill!.content).not.toContain("allowed-tools:");
   });
 });
 

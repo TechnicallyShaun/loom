@@ -15,6 +15,7 @@ export interface LoomConfig {
 export interface SourceContent {
   name: string;
   content: string;
+  frontmatter?: Record<string, unknown>;
 }
 
 export interface MergedProject {
