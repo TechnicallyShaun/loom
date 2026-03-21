@@ -4,6 +4,8 @@ import {
   loomDir,
   compiledDir,
   compiledGlobalDir,
+  deployedDir,
+  deployedGlobalDir,
   userLevelDir,
   timestamp,
 } from "../utils/paths.js";
@@ -50,6 +52,17 @@ export async function deploy(args: string[]): Promise<void> {
       continue;
     }
 
+    // Snapshot compiled output to .deployed/<project>/
+    const snapDir = deployedDir(dir, name);
+    if (fs.existsSync(snapDir)) {
+      fs.rmSync(snapDir, { recursive: true, force: true });
+    }
+    for (const relPath of files) {
+      const snapDest = path.join(snapDir, relPath);
+      ensureDir(path.dirname(snapDest));
+      fs.copyFileSync(path.join(outDir, relPath), snapDest);
+    }
+
     for (const relPath of files) {
       const src = path.join(outDir, relPath);
       const dest = path.join(entry.path, relPath);
@@ -75,6 +88,17 @@ export async function deploy(args: string[]): Promise<void> {
       const destDir = userLevelDir(target);
       const files = walkDir(targetOutDir);
       if (files.length === 0) continue;
+
+      // Snapshot compiled output to .deployed/_global/<target>/
+      const globalSnapDir = path.join(deployedGlobalDir(dir), target);
+      if (fs.existsSync(globalSnapDir)) {
+        fs.rmSync(globalSnapDir, { recursive: true, force: true });
+      }
+      for (const relPath of files) {
+        const snapDest = path.join(globalSnapDir, relPath);
+        ensureDir(path.dirname(snapDest));
+        fs.copyFileSync(path.join(targetOutDir, relPath), snapDest);
+      }
 
       for (const relPath of files) {
         const src = path.join(targetOutDir, relPath);

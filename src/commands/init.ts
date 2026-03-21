@@ -13,6 +13,7 @@ export interface InitAction {
 }
 
 const SUBDIRS = ["global/instructions", "global/skills", "global/agents", "projects"];
+const GITIGNORE_ENTRIES = ["dist/", ".deployed/"];
 
 export function buildInitActions(dir: string): InitAction[] {
   const dirActions: InitAction[] = SUBDIRS.map((sub) => {
@@ -26,6 +27,8 @@ export function buildInitActions(dir: string): InitAction[] {
 
   const configPath = path.join(dir, "config.yaml");
 
+  const gitignorePath = path.join(dir, ".gitignore");
+
   return [
     ...dirActions,
     {
@@ -38,6 +41,23 @@ export function buildInitActions(dir: string): InitAction[] {
           projects: {},
         };
         fs.writeFileSync(configPath, stringify(config), "utf-8");
+      },
+    },
+    {
+      name: "create .gitignore",
+      needed: () => {
+        if (!fs.existsSync(gitignorePath)) return true;
+        const content = fs.readFileSync(gitignorePath, "utf-8");
+        return GITIGNORE_ENTRIES.some((entry) => !content.includes(entry));
+      },
+      run: () => {
+        ensureDir(dir);
+        const existing = fs.existsSync(gitignorePath)
+          ? fs.readFileSync(gitignorePath, "utf-8")
+          : "";
+        const missing = GITIGNORE_ENTRIES.filter((entry) => !existing.includes(entry));
+        const updated = existing.trimEnd() + (existing ? "\n" : "") + missing.join("\n") + "\n";
+        fs.writeFileSync(gitignorePath, updated, "utf-8");
       },
     },
     {

@@ -46,6 +46,16 @@ export function userLevelDir(target: TargetType, home = os.homedir()): string {
   }
 }
 
+/** Deployed snapshot directory for a project */
+export function deployedDir(base: string, name: string): string {
+  return path.join(base, ".deployed", name);
+}
+
+/** Deployed snapshot directory for global (user-level) content */
+export function deployedGlobalDir(base: string): string {
+  return path.join(base, ".deployed", "_global");
+}
+
 /** Config file path */
 export function configPath(base: string): string {
   return path.join(base, "config.yaml");

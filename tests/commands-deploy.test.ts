@@ -69,4 +69,54 @@ describe("deploy command", () => {
   it("skips projects that are not compiled", async () => {
     await deploy(["anvil"]); // Should not throw, just print message
   });
+
+  it("snapshots compiled output to .deployed/<project>/", async () => {
+    writeFile(path.join(loomDir, "dist", "anvil", "CLAUDE.md"), "# Instructions\n");
+    writeFile(
+      path.join(loomDir, "dist", "anvil", ".claude", "skills", "analyse", "SKILL.md"),
+      "# Analyse\n",
+    );
+
+    await deploy(["anvil"]);
+
+    const deployedDir = path.join(loomDir, ".deployed", "anvil");
+    expect(fs.readFileSync(path.join(deployedDir, "CLAUDE.md"), "utf-8")).toBe("# Instructions\n");
+    expect(
+      fs.readFileSync(
+        path.join(deployedDir, ".claude", "skills", "analyse", "SKILL.md"),
+        "utf-8",
+      ),
+    ).toBe("# Analyse\n");
+  });
+
+  it("wipes and recreates .deployed/ on each deploy", async () => {
+    // First deploy
+    writeFile(path.join(loomDir, "dist", "anvil", "CLAUDE.md"), "v1");
+    writeFile(path.join(loomDir, "dist", "anvil", "old-file.md"), "old");
+    await deploy(["anvil"]);
+
+    const deployedDir = path.join(loomDir, ".deployed", "anvil");
+    expect(fs.existsSync(path.join(deployedDir, "old-file.md"))).toBe(true);
+
+    // Second deploy with different files
+    fs.rmSync(path.join(loomDir, "dist", "anvil"), { recursive: true, force: true });
+    writeFile(path.join(loomDir, "dist", "anvil", "CLAUDE.md"), "v2");
+
+    await deploy(["anvil"]);
+
+    expect(fs.readFileSync(path.join(deployedDir, "CLAUDE.md"), "utf-8")).toBe("v2");
+    expect(fs.existsSync(path.join(deployedDir, "old-file.md"))).toBe(false);
+  });
+
+  it("snapshots global deploy to .deployed/_global/<target>/", async () => {
+    writeFile(
+      path.join(loomDir, "dist", "_global", "claude", "CLAUDE.md"),
+      "# Global Instructions\n",
+    );
+
+    await deploy(["_global"]);
+
+    const globalSnap = path.join(loomDir, ".deployed", "_global", "claude", "CLAUDE.md");
+    expect(fs.readFileSync(globalSnap, "utf-8")).toBe("# Global Instructions\n");
+  });
 });
