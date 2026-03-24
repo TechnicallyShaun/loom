@@ -1,6 +1,6 @@
 {
   "name": "loom-cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Weave AI skills once, compile to every coding agent.",
   "type": "module",
   "bin": {
