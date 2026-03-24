@@ -73,9 +73,9 @@ describe("compile command", () => {
     expect(claudeMd).toContain("Anvil Specifics");
   });
 
-  it("compiles skills to .claude/skills/ and .github/skills/", async () => {
+  it("compiles project skills to .claude/skills/ and .github/skills/", async () => {
     writeFile(
-      path.join(loomDir, "global", "skills", "analyse", "SKILL.md"),
+      path.join(loomDir, "projects", "anvil", "skills", "analyse", "SKILL.md"),
       "# Analyse\n\nDo analysis.",
     );
 
@@ -93,25 +93,26 @@ describe("compile command", () => {
     ).toBe(true);
   });
 
-  it("project skills override global skills with same name", async () => {
-    writeFile(path.join(loomDir, "global", "skills", "setup-env", "SKILL.md"), "Global setup-env");
+  it("global skills do not appear in project output", async () => {
     writeFile(
-      path.join(loomDir, "projects", "anvil", "skills", "setup-env", "SKILL.md"),
-      "Anvil setup-env",
+      path.join(loomDir, "global", "skills", "shared-skill", "SKILL.md"),
+      "Global shared skill",
     );
 
     await compile(["anvil"]);
 
-    const skill = fs.readFileSync(
-      path.join(loomDir, "dist", "anvil", ".claude", "skills", "setup-env", "SKILL.md"),
-      "utf-8",
-    );
-    expect(skill).toContain("Anvil setup-env");
-    expect(skill).not.toContain("Global setup-env");
+    expect(
+      fs.existsSync(
+        path.join(loomDir, "dist", "anvil", ".claude", "skills", "shared-skill", "SKILL.md"),
+      ),
+    ).toBe(false);
   });
 
-  it("compiles agents with frontmatter for Claude", async () => {
-    writeFile(path.join(loomDir, "global", "agents", "work.md"), "# Work Agent\n\nDo work.");
+  it("compiles project agents with frontmatter for Claude", async () => {
+    writeFile(
+      path.join(loomDir, "projects", "anvil", "agents", "work.md"),
+      "# Work Agent\n\nDo work.",
+    );
 
     await compile(["anvil"]);
 

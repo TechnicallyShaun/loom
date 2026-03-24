@@ -39,18 +39,10 @@ describe("full pipeline: init → register → compile → deploy → diff → d
     expect(fs.existsSync(path.join(loomHome, ".git"))).toBe(true);
     expect(fs.existsSync(path.join(loomHome, "global", "instructions"))).toBe(true);
 
-    // 2. Add global content
+    // 2. Add global content (instructions only — skills/agents go to project)
     writeFile(
       path.join(loomHome, "global", "instructions", "conventions.md"),
       "# Conventions\n\nUse conventional commits.\nAlways run tests before pushing.",
-    );
-    writeFile(
-      path.join(loomHome, "global", "skills", "analyse", "SKILL.md"),
-      "# Analyse\n\nPerform deep analysis of the codebase.",
-    );
-    writeFile(
-      path.join(loomHome, "global", "agents", "work.md"),
-      "# Work Agent\n\nRead the plan, set up env, implement, test, commit.",
     );
 
     // 3. Register (uses config-level targets set by init)
@@ -65,8 +57,16 @@ describe("full pipeline: init → register → compile → deploy → diff → d
       "# Anvil Setup\n\nRun IIS first, then build.",
     );
     writeFile(
+      path.join(loomHome, "projects", "anvil", "skills", "analyse", "SKILL.md"),
+      "# Analyse\n\nPerform deep analysis of the codebase.",
+    );
+    writeFile(
       path.join(loomHome, "projects", "anvil", "skills", "setup-env", "SKILL.md"),
       "# Setup Env (Anvil)\n\n1. Reset DB\n2. Start Docker\n3. Build",
+    );
+    writeFile(
+      path.join(loomHome, "projects", "anvil", "agents", "work.md"),
+      "# Work Agent\n\nRead the plan, set up env, implement, test, commit.",
     );
 
     // 5. Compile
@@ -133,7 +133,7 @@ describe("full pipeline: init → register → compile → deploy → diff → d
     expect(log).toContain("deploy: anvil");
   });
 
-  it("compiles with project skill overriding global", async () => {
+  it("only project skills appear in project output", async () => {
     await init([]);
 
     writeFile(
@@ -164,19 +164,24 @@ describe("full pipeline with harvest", () => {
     // 1. Init
     await init([]);
 
-    // 2. Add global content
+    // 2. Add global instructions
     writeFile(
       path.join(loomHome, "global", "instructions", "conventions.md"),
       "# Conventions\n\nUse conventional commits.",
     );
-    writeFile(
-      path.join(loomHome, "global", "skills", "analyse", "SKILL.md"),
-      "# Analyse\n\nAnalyse the codebase.",
-    );
-    writeFile(path.join(loomHome, "global", "agents", "work.md"), "# Work Agent\n\nDo the work.");
 
     // 3. Register (uses config-level targets)
     await register(["anvil", projectPath]);
+
+    // Add project-level skills and agents
+    writeFile(
+      path.join(loomHome, "projects", "anvil", "skills", "analyse", "SKILL.md"),
+      "# Analyse\n\nAnalyse the codebase.",
+    );
+    writeFile(
+      path.join(loomHome, "projects", "anvil", "agents", "work.md"),
+      "# Work Agent\n\nDo the work.",
+    );
 
     // 4. Compile
     await compile(["anvil"]);

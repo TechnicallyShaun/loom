@@ -67,12 +67,12 @@ export async function compile(args: string[]): Promise<void> {
       projectPath: entry.path,
       loomRoot,
       instructions: concatInstructions(globalInstructions, projInstructions),
-      skills: mergeLayers(globalSkills, projSkills),
-      agents: mergeLayers(globalAgents, projAgents),
+      skills: projSkills,
+      agents: projAgents,
     };
 
-    // Validate /skill-name references
-    const knownSkills = merged.skills.map((s) => s.name);
+    // Validate /skill-name references (check against both global + project skills)
+    const knownSkills = mergeLayers(globalSkills, projSkills).map((s) => s.name);
     for (const skill of merged.skills) {
       const unknown = validateSkillRefs(skill.content, knownSkills);
       for (const ref of unknown) {
