@@ -241,6 +241,82 @@ For `myproject`, the project-level `work.md` replaces the global one entirely. O
 
 ---
 
+## Substitution Variables
+
+Skills support substitution variables for paths and arguments. These compile to the correct syntax per target.
+
+### Path variables
+
+Use these to reference files relative to the skill, project, or workspace:
+
+| Variable | Resolves to | Example |
+|---|---|---|
+| `{skill}` | The directory containing this SKILL.md | `.claude/skills/analyse/` |
+| `{project}` | The registered project root | `D:\Git\project-a\` |
+| `{loom}` | The workspace root (parent of `.loom/`) | `D:\Git\` |
+
+```markdown
+Run `npx tsx {skill}/trac.ts GetTicket`
+Check `{project}/src/` for existing patterns.
+See `{loom}/shared/conventions.md` for cross-project standards.
+```
+
+Each target gets the best available form:
+
+| Variable | Claude | Copilot | Codex | Gemini |
+|---|---|---|---|---|
+| `{skill}` | `${CLAUDE_SKILL_DIR}` | `.github/skills/<name>` | `.codex/skills/<name>` | `.gemini/skills/<name>` |
+| `{project}` | Absolute path | `.` | `.` | `.` |
+| `{loom}` | Absolute path | Absolute path | Absolute path | Absolute path |
+
+### Argument variables
+
+Use `{args}` for a single freeform input, or `{arg:name}` for named arguments. Don't mix both — it's a compile error.
+
+**`{args}`** — the entire argument string:
+
+```markdown
+Fetch ticket {args} from Trac.
+```
+
+| Target | Output |
+|---|---|
+| Claude | `$ARGUMENTS` |
+| Copilot | `${input:input:Provide the input}` |
+| Codex | `$ARGUMENTS` |
+| Gemini | `$ARGUMENTS` |
+
+**`{arg:name}`** — named arguments (mapped positionally by order of first appearance):
+
+```markdown
+Analyse {arg:ticket} using the {arg:strategy} strategy.
+```
+
+| Target | Output |
+|---|---|
+| Claude | `$0`, `$1` |
+| Copilot | `${input:ticket:Enter ticket}`, `${input:strategy:Enter strategy}` |
+| Codex | `$0`, `$1` |
+| Gemini | `$1`, `$2` |
+
+### Argument hints
+
+The `argument-hint` frontmatter field is auto-derived from `{arg:*}` usage if not set explicitly. A skill using `{arg:ticket}` and `{arg:strategy}` gets:
+
+```yaml
+argument-hint: <ticket> <strategy>
+```
+
+If you set `argument-hint` explicitly in frontmatter, that takes precedence.
+
+### Edge cases
+
+- `{arg:name}` used multiple times — same positional index each time (Claude), same variable (Copilot).
+- Hyphens in names — `{arg:ticket-id}` compiles to `${input:ticketId:Enter ticket-id}` for Copilot (camelCase the variable, keep the display text).
+- `{project}` in a global skill — logs a warning, since global skills have no project context.
+
+---
+
 ## Target support
 
 Not all targets support all content types:
