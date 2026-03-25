@@ -41,9 +41,10 @@ export function compileGemini(project: MergedProject): CompiledFile[] {
 
   // Instructions → GEMINI.md
   if (project.instructions) {
+    const ctx = geminiSubstitutions("", project.projectPath, project.loomRoot);
     files.push({
       relativePath: "GEMINI.md",
-      content: project.instructions + "\n",
+      content: applySubstitutions(project.instructions, ctx) + "\n",
     });
   }
 
@@ -66,10 +67,12 @@ export function compileGemini(project: MergedProject): CompiledFile[] {
 
   // Agents → .gemini/agents/<name>.md
   for (const agent of project.agents) {
+    const ctx = geminiSubstitutions("", project.projectPath, project.loomRoot);
+    const body = applySubstitutions(agent.content, ctx);
     const fm = mapAgentFrontmatter(agent.frontmatter ?? {});
     files.push({
       relativePath: `.gemini/agents/${agent.name}.md`,
-      content: serializeFrontmatter(fm, agent.content) + "\n",
+      content: serializeFrontmatter(fm, body) + "\n",
     });
   }
 

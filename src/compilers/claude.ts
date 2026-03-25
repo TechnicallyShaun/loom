@@ -45,9 +45,10 @@ export function compileClaude(project: MergedProject): CompiledFile[] {
 
   // Instructions → CLAUDE.md
   if (project.instructions) {
+    const ctx = claudeSubstitutions("", project.projectPath, project.loomRoot);
     files.push({
       relativePath: "CLAUDE.md",
-      content: project.instructions + "\n",
+      content: applySubstitutions(project.instructions, ctx) + "\n",
     });
   }
 
@@ -70,10 +71,12 @@ export function compileClaude(project: MergedProject): CompiledFile[] {
 
   // Agents → .claude/agents/<name>.md
   for (const agent of project.agents) {
+    const ctx = claudeSubstitutions("", project.projectPath, project.loomRoot);
+    const body = applySubstitutions(agent.content, ctx);
     const fm = mapAgentFrontmatter(agent.frontmatter ?? {});
     files.push({
       relativePath: `.claude/agents/${agent.name}.md`,
-      content: serializeFrontmatter(fm, agent.content) + "\n",
+      content: serializeFrontmatter(fm, body) + "\n",
     });
   }
 

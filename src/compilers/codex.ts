@@ -44,9 +44,10 @@ export function compileCodex(project: MergedProject): CompiledFile[] {
 
   // Instructions → AGENTS.md
   if (project.instructions) {
+    const ctx = codexSubstitutions("", project.projectPath, project.loomRoot);
     files.push({
       relativePath: "AGENTS.md",
-      content: project.instructions + "\n",
+      content: applySubstitutions(project.instructions, ctx) + "\n",
     });
   }
 
@@ -69,7 +70,9 @@ export function compileCodex(project: MergedProject): CompiledFile[] {
 
   // Agents → .codex/agents/<name>.toml
   for (const agent of project.agents) {
-    const toml = mapAgentToml(agent.frontmatter ?? {}, agent.content);
+    const ctx = codexSubstitutions("", project.projectPath, project.loomRoot);
+    const body = applySubstitutions(agent.content, ctx);
+    const toml = mapAgentToml(agent.frontmatter ?? {}, body);
     files.push({
       relativePath: `.codex/agents/${agent.name}.toml`,
       content: serializeToml(toml) + "\n",

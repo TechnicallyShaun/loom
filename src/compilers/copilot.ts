@@ -44,9 +44,10 @@ export function compileCopilot(project: MergedProject): CompiledFile[] {
 
   // Instructions → .github/copilot-instructions.md
   if (project.instructions) {
+    const ctx = copilotSubstitutions("", project.projectPath, project.loomRoot);
     files.push({
       relativePath: ".github/copilot-instructions.md",
-      content: project.instructions + "\n",
+      content: applySubstitutions(project.instructions, ctx) + "\n",
     });
   }
 
@@ -69,10 +70,12 @@ export function compileCopilot(project: MergedProject): CompiledFile[] {
 
   // Agents → .github/agents/<name>.agent.md
   for (const agent of project.agents) {
+    const ctx = copilotSubstitutions("", project.projectPath, project.loomRoot);
+    const body = applySubstitutions(agent.content, ctx);
     const fm = mapAgentFrontmatter(agent.frontmatter ?? {});
     files.push({
       relativePath: `.github/agents/${agent.name}.agent.md`,
-      content: serializeFrontmatter(fm, agent.content) + "\n",
+      content: serializeFrontmatter(fm, body) + "\n",
     });
   }
 
