@@ -40,9 +40,9 @@ afterEach(() => {
 });
 
 describe("compile command", () => {
-  it("compiles global instructions to CLAUDE.md", async () => {
+  it("compiles project instructions to CLAUDE.md", async () => {
     writeFile(
-      path.join(loomDir, "global", "instructions", "conventions.md"),
+      path.join(loomDir, "projects", "anvil", "instructions", "conventions.md"),
       "# Conventions\n\nUse conventional commits.",
     );
 
@@ -53,7 +53,7 @@ describe("compile command", () => {
     expect(fs.readFileSync(claudeMd, "utf-8")).toContain("Conventions");
   });
 
-  it("merges global and project instructions", async () => {
+  it("global instructions do not appear in project output", async () => {
     writeFile(
       path.join(loomDir, "global", "instructions", "conventions.md"),
       "# Global Conventions",
@@ -69,7 +69,7 @@ describe("compile command", () => {
       path.join(loomDir, "dist", "anvil", "CLAUDE.md"),
       "utf-8",
     );
-    expect(claudeMd).toContain("Global Conventions");
+    expect(claudeMd).not.toContain("Global Conventions");
     expect(claudeMd).toContain("Anvil Specifics");
   });
 
@@ -138,7 +138,14 @@ describe("compile command", () => {
       },
     });
     fs.mkdirSync(path.join(loomDir, "projects", "spark", "instructions"), { recursive: true });
-    writeFile(path.join(loomDir, "global", "instructions", "conv.md"), "Global");
+    writeFile(
+      path.join(loomDir, "projects", "anvil", "instructions", "conv.md"),
+      "Anvil conventions",
+    );
+    writeFile(
+      path.join(loomDir, "projects", "spark", "instructions", "conv.md"),
+      "Spark conventions",
+    );
 
     await compile([]);
 

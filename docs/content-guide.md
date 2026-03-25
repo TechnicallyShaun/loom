@@ -42,9 +42,9 @@ Plain markdown files. Any filename ending in `.md`.
 | Global | `.loom/global/instructions/<name>.md` | Team conventions, coding standards, shared knowledge |
 | Project | `.loom/projects/<name>/instructions/<name>.md` | Project architecture, setup quirks, repo-specific context |
 
-### Merge rule
+### Compilation rule
 
-**Concatenated.** Global instructions come first, then project instructions, separated by `---`. All instruction files within a layer are combined into a single output file per target.
+**Separate channels.** Global instructions compile to user-level output (e.g. `~/.claude/CLAUDE.md`). Project instructions compile to project output (e.g. `CLAUDE.md` in the project root). The AI target sees both at runtime. All instruction files within a layer are combined into a single output file per target.
 
 ### Example
 
@@ -78,7 +78,7 @@ Create a project-specific instruction:
 - The Facade layer handles all business logic — never put logic in controllers
 ```
 
-After `loom compile`, the Claude target produces a single `CLAUDE.md` containing both files concatenated (conventions first, then architecture, separated by `---`).
+After `loom compile`, the global conventions compile to `dist/_global/claude/CLAUDE.md` (deployed to `~/.claude/CLAUDE.md`). The project architecture compiles to `dist/myproject/CLAUDE.md` (deployed to the project root). The AI sees both at runtime.
 
 ---
 

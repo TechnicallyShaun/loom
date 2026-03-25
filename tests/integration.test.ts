@@ -74,9 +74,9 @@ describe("full pipeline: init → register → compile → deploy → diff → d
 
     const compiledDir = path.join(loomHome, "dist", "anvil");
 
-    // Claude outputs
+    // Claude outputs — project instructions only (global goes to user-level)
     const claudeMd = fs.readFileSync(path.join(compiledDir, "CLAUDE.md"), "utf-8");
-    expect(claudeMd).toContain("Conventions");
+    expect(claudeMd).not.toContain("Conventions");
     expect(claudeMd).toContain("Anvil Setup");
 
     const analyseSkill = fs.readFileSync(
@@ -164,16 +164,14 @@ describe("full pipeline with harvest", () => {
     // 1. Init
     await init([]);
 
-    // 2. Add global instructions
-    writeFile(
-      path.join(loomHome, "global", "instructions", "conventions.md"),
-      "# Conventions\n\nUse conventional commits.",
-    );
-
-    // 3. Register (uses config-level targets)
+    // 2. Register (uses config-level targets)
     await register(["anvil", projectPath]);
 
-    // Add project-level skills and agents
+    // 3. Add project-level content
+    writeFile(
+      path.join(loomHome, "projects", "anvil", "instructions", "conventions.md"),
+      "# Conventions\n\nUse conventional commits.",
+    );
     writeFile(
       path.join(loomHome, "projects", "anvil", "skills", "analyse", "SKILL.md"),
       "# Analyse\n\nAnalyse the codebase.",

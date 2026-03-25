@@ -66,7 +66,7 @@ export async function compile(args: string[]): Promise<void> {
       targets: config.targets,
       projectPath: entry.path,
       loomRoot,
-      instructions: concatInstructions(globalInstructions, projInstructions),
+      instructions: concatInstructions([], projInstructions),
       skills: projSkills,
       agents: projAgents,
     };

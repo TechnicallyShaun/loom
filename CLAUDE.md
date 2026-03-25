@@ -29,8 +29,8 @@ CI (.github/workflows/ci.yml) runs lint, format:check, build, test, and coverage
 The core data flow is: **source → compile → deploy** (and **harvest** for the reverse).
 
 1. **Source** lives in `.loom/` — a self-contained git repo with global and per-project layers
-2. **Compile** merges the two layers, then runs per-target compilers to produce output in `.compiled/<project>/`
-3. **Deploy** copies compiled files to registered project paths (pure file copy, no transformation)
+2. **Compile** runs per-target compilers on each layer independently — global to `dist/_global/`, project to `dist/<project>/`
+3. **Deploy** copies compiled files to their destinations (project output → project path, global output → user-level dirs like `~/.claude/`), cleaning stale files first
 4. **Harvest** diffs deployed files against compiled output to detect changes, then writes them back to source
 
 ### CLI entry point
@@ -49,13 +49,13 @@ Each compiler takes a `MergedProject` and returns `CompiledFile[]`. Targets: cla
 
 YAML-based (`config.yaml`) with `targets` array and `projects` map. Config is tracked in the `.loom/` git repo. `validateTargets()` checks against `VALID_TARGETS`.
 
-### Source types and merge rules
+### Source types and compilation rules
 
-Three content types with two-layer (global + project) merging:
+Three content types at two layers (global + project). Each layer compiles independently — global to user-level output, project to project output. The AI target sees both at runtime.
 
-- **Instructions** (`instructions/*.md`): always-loaded context. Layers are **concatenated** (global first, separated by `---`).
-- **Skills** (`skills/*/SKILL.md`): on-demand workflows in folders. Project **overrides** global by name.
-- **Agents** (`agents/*.md`): orchestrator definitions. Project **overrides** global by name.
+- **Instructions** (`instructions/*.md`): always-loaded context. Global compiles to user-level, project compiles to project-level.
+- **Skills** (`skills/*/SKILL.md`): on-demand workflows in folders. Global compiles to user-level, project compiles to project-level.
+- **Agents** (`agents/*.md`): orchestrator definitions. Global compiles to user-level, project compiles to project-level.
 
 ### Utilities (`src/utils/`)
 
